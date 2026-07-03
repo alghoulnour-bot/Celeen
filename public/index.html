@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Omar &amp; Celeen — July 26, 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div id="petals" class="petals-bg" aria-hidden="true"></div>
+
+  <!-- Video opens on the envelope itself (Scenes 1-7 baked in) -->
+  <section id="video-stage" class="stage">
+    <video id="invite-video" src="assets/invite-video.mp4" playsinline preload="auto"></video>
+    <button id="tap-to-open" class="tap-overlay" aria-label="Tap to open your invitation">
+      <span class="tap-overlay__text">Tap to Open</span>
+    </button>
+    <button id="skip-video" class="skip-link" hidden>Skip</button>
+  </section>
+
+  <!-- Scenes 6-7 + RSVP + Nqoot -->
+  <main id="main-content" hidden>
+
+    <section class="hero">
+      <h1>Omar &amp; Celeen</h1>
+      <p class="hero__date">July 26, 2026</p>
+      <p class="hero__tagline">Join us as we celebrate our forever.</p>
+    </section>
+
+    <section id="rsvp" class="panel">
+      <h2>RSVP</h2>
+      <p class="panel__intro">Find your name below to confirm your seat.</p>
+
+      <div class="autocomplete">
+        <input type="text" id="rsvp-name" placeholder="Start typing your name…" autocomplete="off" />
+        <ul id="rsvp-suggestions" class="autocomplete__list" hidden></ul>
+      </div>
+
+      <button id="rsvp-confirm" class="btn" disabled>Confirm Attendance</button>
+      <p id="rsvp-message" class="panel__message" role="status"></p>
+    </section>
+
+    <section id="nqoot" class="panel">
+      <h2>Nqoot</h2>
+      <p class="panel__intro">Your presence is the greatest gift — but if you'd like to honor tradition, you may send one below.</p>
+
+      <a id="stripe-pay-link" class="btn btn--card" href="https://buy.stripe.com/test_7sY7sL0Fr3Jr4HG6Ye7Vm00" target="_blank" rel="noopener">Pay by Card or Apple Pay</a>
+
+      <div class="or-divider">or</div>
+
+      <div class="zelle-card">
+        <span class="zelle-card__label">Send via Zelle to</span>
+        <button type="button" id="zelle-number" class="zelle-card__number" title="Tap to copy">469-349-3827</button>
+        <span id="zelle-copied" class="zelle-card__copied" hidden>Copied!</span>
+      </div>
+
+      <p class="panel__intro">Once you've sent it, let us know so we can thank you personally:</p>
+
+      <label class="field-label" for="gift-name">Your name</label>
+      <input type="text" id="gift-name" placeholder="Full name" required />
+
+      <div class="amount-presets">
+        <button type="button" class="amount-btn" data-amount="50">$50</button>
+        <button type="button" class="amount-btn" data-amount="100">$100</button>
+        <button type="button" class="amount-btn" data-amount="200">$200</button>
+      </div>
+
+      <label class="field-label" for="gift-amount">Or enter another amount</label>
+      <input type="number" id="gift-amount" min="1" step="1" placeholder="Amount (USD)" />
+
+      <button id="gift-submit" class="btn">I've Sent My Gift</button>
+      <p id="gift-message" class="panel__message" role="status"></p>
+    </section>
+
+    <footer class="footer">
+      <p>We can't wait to celebrate with you.</p>
+      <p class="footer__names">Omar &amp; Celeen</p>
+    </footer>
+
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
