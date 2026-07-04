@@ -210,6 +210,18 @@
       if (lenis) lenis.scrollTo('#attend', { offset: -30, duration: 0.6 });
     }
 
+    // Show the guest's seat prominently on both the gift and thank-you cards.
+    function setSeat() {
+      const s = state.table == null ? ''
+        : state.partySize > 1
+          ? `Your seat · Table ${state.table} · Party of ${state.partySize}`
+          : `Your seat · Table ${state.table}`;
+      ['q-seat', 'q-thanks-seat'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = s; el.hidden = !s; }
+      });
+    }
+
     async function post(path, body) {
       const res = await fetch('/api/respond/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await res.json().catch(() => ({}));
@@ -256,10 +268,7 @@
         if (res.ok) {
           state.table = s.table; state.partySize = s.partySize;
           if (s.responded && s.attending) {
-            const seat = document.getElementById('q-seat');
-            seat.textContent = state.partySize > 1
-              ? `Welcome back — confirmed, party of ${state.partySize} · Table ${state.table}`
-              : `Welcome back — you're confirmed · Table ${state.table}`;
+            setSeat();
             goto('gift');
             return;
           }
@@ -277,8 +286,7 @@
           const data = await post('attend', { name: state.name, attending });
           state.table = data.table; state.partySize = data.partySize;
           if (attending) {
-            const seat = document.getElementById('q-seat');
-            seat.textContent = state.partySize > 1 ? `You & your party of ${state.partySize} · Table ${state.table}` : `You're at Table ${state.table}`;
+            setSeat();
             goto('gift');
           } else {
             document.getElementById('q-thanks-title').textContent = 'We’ll miss you';
@@ -364,6 +372,24 @@
     }
     buildCountdown();
     buildQuiz();
+    buildAdminDot();
+  }
+
+  /* ---- Discreet admin access (footer dot -> passcode -> dashboard) -------- */
+  function buildAdminDot() {
+    const dot = document.getElementById('admin-dot');
+    const form = document.getElementById('admin-form');
+    const input = document.getElementById('admin-pass');
+    if (!dot || !form) return;
+    dot.addEventListener('click', () => {
+      form.hidden = !form.hidden;
+      if (!form.hidden) input.focus();
+    });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = input.value.trim();
+      if (code) window.location.href = '/admin?key=' + encodeURIComponent(code);
+    });
   }
 
   runPreloader(init);

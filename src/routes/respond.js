@@ -88,11 +88,7 @@ router.post('/gift', (req, res) => {
   if (!Number.isFinite(parsed) || parsed <= 0) {
     return res.status(400).json({ error: 'Enter a valid amount' });
   }
-  responseStore.upsert(guest.name, {
-    giftMethod: method,
-    giftAmount: parsed,
-    giftReportedAt: new Date().toISOString(),
-  });
+  responseStore.addGift(guest.name, method, parsed);
   res.json({ ok: true });
 });
 

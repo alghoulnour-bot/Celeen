@@ -160,7 +160,6 @@
         <div class="q" data-step="gift" hidden>
           <p class="q__seat" id="q-seat"></p>
           <p class="q__title">Would you like to send nqoot? <span class="q__title-ar" lang="ar" dir="rtl">نقوط</span></p>
-          <p class="q__sub">A gift toward our new life together — entirely optional.</p>
           <div class="q__btns">
             <button class="pill mag" data-gift="yes">Yes, with love</button>
             <button class="pill pill--ghost mag" data-gift="no">Not this time</button>
@@ -221,6 +220,7 @@
           <span class="crest" data-crest></span>
           <p class="q__title" id="q-thanks-title">Thank you</p>
           <p class="q__sub" id="q-thanks-sub">We can't wait to celebrate with you.</p>
+          <p class="q__seat" id="q-thanks-seat" hidden></p>
           <p class="q__sub" lang="ar" dir="rtl">بانتظاركم</p>
         </div>
 
@@ -233,6 +233,10 @@
     <span class="crest crest--footer" data-crest></span>
     <p class="footer__names">Omar &amp; Celeen</p>
     <p class="footer__date">July 26, 2026 &middot; Irving, Texas</p>
+    <button class="footer__dot" id="admin-dot" type="button" aria-label="."></button>
+    <form class="footer__adminform" id="admin-form" hidden>
+      <input type="password" id="admin-pass" placeholder="Passcode" autocomplete="off" aria-label="Passcode" />
+    </form>
   </footer>
 
   <script src="vendor/gsap.min.js"></script>

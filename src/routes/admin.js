@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const responseStore = require('../responseStore');
+const guestStore = require('../guestStore');
 
 const router = express.Router();
 
@@ -24,7 +25,6 @@ function guard(req, res, next) {
   next();
 }
 
-// Escape any value before it lands in the HTML dashboard.
 function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -36,6 +36,7 @@ const COLUMNS = [
   ['table', 'Table'],
   ['giftMethod', 'Method'],
   ['giftAmount', 'Amount ($)'],
+  ['giftCount', 'Gifts'],
   ['giftActualAmount', 'Actual ($)'],
   ['updatedAt', 'Updated'],
 ];
@@ -49,12 +50,10 @@ function cell(value, key) {
 
 function csvCell(value) {
   let s = value === undefined || value === null ? '' : String(value);
-  // Neutralize spreadsheet formula injection (=, +, -, @, tab/CR leading char).
   if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
   return '"' + s.replace(/"/g, '""') + '"';
 }
 
-// Viewable dashboard: live table of every response + a CSV download link.
 router.get('/', guard, (req, res) => {
   const rows = responseStore.all().sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
   const attending = rows.filter((r) => r.attending).length;
@@ -65,41 +64,101 @@ router.get('/', guard, (req, res) => {
     ? rows.map((r) => `<tr>${COLUMNS.map(([k]) => `<td>${esc(cell(r[k], k))}</td>`).join('')}</tr>`).join('')
     : `<tr><td colspan="${COLUMNS.length}" class="empty">No responses yet.</td></tr>`;
 
+  const guests = guestStore.getGuests();
+  const respondedNames = new Set(rows.map((r) => String(r.name).toLowerCase()));
+  const guestRows = guests.length
+    ? guests.map((g) => `<tr>
+        <td>${esc(g.name)}</td><td>${esc(g.table)}</td><td>${esc(g.partySize)}</td>
+        <td>${respondedNames.has(String(g.name).toLowerCase()) ? 'responded' : '—'}</td>
+        <td><button class="rm" data-name="${esc(g.name)}">Remove</button></td>
+      </tr>`).join('')
+    : `<tr><td colspan="5" class="empty">No guests yet.</td></tr>`;
+
   res.send(`<!doctype html><html><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Omar & Celeen — Responses</title>
+<title>Omar & Celeen — Admin</title>
 <style>
   :root{--green:#3C4A34;--gold:#8F7A49;--bone:#F7F1E6;--ink:#2C271C;--line:rgba(44,39,28,.14);}
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Cormorant Garamond',Georgia,serif;background:var(--bone);color:var(--ink);padding:2.5rem 1.5rem;}
+  body{font-family:'Cormorant Garamond',Georgia,serif;background:var(--bone);color:var(--ink);padding:2.5rem 1.5rem;max-width:1100px;margin:0 auto;}
   h1{font-weight:500;font-size:2rem;color:var(--green);}
+  h2{font-weight:500;font-size:1.4rem;color:var(--green);margin:2.6rem 0 1rem;}
   .sub{font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:.3rem 0 1.5rem;font-family:Arial,sans-serif;}
   .stats{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;}
   .stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:1rem 1.4rem;min-width:130px;}
   .stat b{display:block;font-size:1.8rem;color:var(--green);}
   .stat span{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#786;font-family:Arial,sans-serif;}
   .bar{margin-bottom:1rem;}
-  a.btn{display:inline-block;background:var(--green);color:var(--bone);text-decoration:none;padding:.6rem 1.2rem;border-radius:999px;font-family:Arial,sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;}
+  a.btn,button{font-family:Arial,sans-serif;}
+  a.btn{display:inline-block;background:var(--green);color:var(--bone);text-decoration:none;padding:.6rem 1.2rem;border-radius:999px;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;}
   .wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff;}
-  table{border-collapse:collapse;width:100%;min-width:760px;}
+  table{border-collapse:collapse;width:100%;min-width:640px;}
   th,td{text-align:left;padding:.7rem 1rem;border-bottom:1px solid var(--line);font-size:1rem;white-space:nowrap;}
   th{font-family:Arial,sans-serif;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);background:#faf6ec;}
   tr:last-child td{border-bottom:none;}
   .empty{text-align:center;color:#a99;padding:2rem;}
+  form.add{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center;}
+  form.add input{font-family:'Cormorant Garamond',serif;font-size:1rem;padding:.55rem .8rem;border:1px solid var(--line);border-radius:8px;background:#fff;}
+  form.add input[name=name]{flex:1;min-width:180px;}
+  form.add input[type=number]{width:110px;}
+  form.add button{background:var(--green);color:var(--bone);border:none;border-radius:8px;padding:.6rem 1.1rem;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;}
+  button.rm{background:none;border:1px solid var(--line);border-radius:6px;color:#9a5a3a;font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.35rem .7rem;cursor:pointer;}
+  button.rm:hover{border-color:#9a5a3a;}
+  .msg{font-size:.95rem;color:#9a5a3a;min-height:1.2em;margin-bottom:.6rem;}
 </style></head><body>
   <h1>Omar &amp; Celeen</h1>
-  <p class="sub">Responses Dashboard</p>
+  <p class="sub">Admin</p>
   <div class="stats">
     <div class="stat"><b>${attending}</b><span>Parties attending</span></div>
     <div class="stat"><b>${guestsComing}</b><span>Guests coming</span></div>
     <div class="stat"><b>$${pledged.toLocaleString()}</b><span>Pledged (nqoot)</span></div>
     <div class="stat"><b>${rows.length}</b><span>Total responses</span></div>
   </div>
+
+  <h2>Responses</h2>
   <p class="bar"><a class="btn" href="/admin/export?key=${esc(encodeURIComponent(req.query.key || ''))}">Download CSV</a></p>
   <div class="wrap"><table>
     <thead><tr>${COLUMNS.map(([, label]) => `<th>${label}</th>`).join('')}</tr></thead>
     <tbody>${body}</tbody>
   </table></div>
+
+  <h2>Guest List <span style="color:#786;font-size:1rem;">(${guests.length})</span></h2>
+  <p style="font-family:Arial;font-size:.8rem;color:#786;margin-bottom:.8rem;">Add guests here so they can find themselves in the RSVP search. Table &amp; party size show on their card and in the CSV.</p>
+  <form class="add" id="add-form">
+    <input name="name" placeholder="Full name" autocomplete="off" required />
+    <input name="table" type="number" min="1" placeholder="Table" required />
+    <input name="partySize" type="number" min="1" placeholder="Party size" required />
+    <button type="submit">Add guest</button>
+  </form>
+  <p class="msg" id="msg"></p>
+  <div class="wrap"><table>
+    <thead><tr><th>Name</th><th>Table</th><th>Party</th><th>RSVP</th><th></th></tr></thead>
+    <tbody>${guestRows}</tbody>
+  </table></div>
+
+  <script>
+    var KEY = new URLSearchParams(location.search).get('key') || '';
+    function api(path, data){
+      return fetch('/admin/'+path+'?key='+encodeURIComponent(KEY), {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+      }).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); });
+    }
+    document.getElementById('add-form').addEventListener('submit', function(e){
+      e.preventDefault();
+      var f = e.target;
+      api('guests/add', { name:f.name.value, table:f.table.value, partySize:f.partySize.value })
+        .then(function(res){
+          if(!res.ok){ document.getElementById('msg').textContent = res.d.error || 'Could not add guest.'; return; }
+          location.reload();
+        });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.rm'), function(btn){
+      btn.addEventListener('click', function(){
+        if(!confirm('Remove '+btn.dataset.name+' from the guest list?')) return;
+        api('guests/remove', { name: btn.dataset.name }).then(function(){ location.reload(); });
+      });
+    });
+  </script>
 </body></html>`);
 });
 
@@ -111,6 +170,19 @@ router.get('/export', guard, (req, res) => {
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="omar-celeen-responses.csv"');
   res.send(csv);
+});
+
+// Guest editor — add / remove guests at runtime (persisted to data/guests.json).
+router.post('/guests/add', guard, express.json(), (req, res) => {
+  const { name, table, partySize } = req.body || {};
+  const result = guestStore.addGuest({ name, table, partySize });
+  if (result.error) return res.status(400).json({ error: result.error });
+  res.json({ ok: true, guest: result.guest });
+});
+
+router.post('/guests/remove', guard, express.json(), (req, res) => {
+  const removed = guestStore.removeGuest((req.body || {}).name);
+  res.json({ ok: removed });
 });
 
 module.exports = router;

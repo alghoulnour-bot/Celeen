@@ -33,6 +33,21 @@ function get(name) {
   return readJson(FILE, {})[keyOf(name)] || null;
 }
 
+// Record a (self-reported) gift, ACCUMULATING onto any previous amount so a
+// guest who gives more later adds to their total rather than overwriting it.
+function addGift(name, method, amount) {
+  const existing = get(name) || {};
+  const total = (Number(existing.giftAmount) || 0) + (Number(amount) || 0);
+  const methods = existing.giftMethod ? existing.giftMethod.split(',').map((s) => s.trim()) : [];
+  if (method && !methods.includes(method)) methods.push(method);
+  return upsert(name, {
+    giftAmount: total,
+    giftMethod: methods.join(', '),
+    giftCount: (Number(existing.giftCount) || 0) + 1,
+    giftReportedAt: new Date().toISOString(),
+  });
+}
+
 // Used by the Stripe webhook to attach the *actual* charged amount to whoever
 // the payment link was tagged with (client_reference_id = name). Only records
 // for a known guest, stores under the canonical name, and never overwrites an
@@ -51,4 +66,4 @@ function recordActualPayment(name, actualAmount) {
   return upsert(guest.name, { giftActualAmount: actualAmount, giftPaidAt: new Date().toISOString() });
 }
 
-module.exports = { upsert, all, get, recordActualPayment, findGuestByName };
+module.exports = { upsert, all, get, addGift, recordActualPayment, findGuestByName };
