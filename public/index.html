@@ -4,84 +4,239 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Omar &amp; Celeen — July 26, 2026</title>
+  <meta name="description" content="Omar &amp; Celeen — Sunday, July 26, 2026 · Dallas / Las Colinas Marriott." />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Pinyon+Script&family=Jost:wght@300;400;500&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-  <div id="petals" class="petals-bg" aria-hidden="true"></div>
+  <!-- Deckle edge filter -->
+  <svg class="svg-defs" width="0" height="0" aria-hidden="true">
+    <filter id="deckle">
+      <feTurbulence type="fractalNoise" baseFrequency="0.014 0.016" numOctaves="2" seed="7" result="n" />
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
 
-  <!-- Video opens on the envelope itself (Scenes 1-7 baked in) -->
-  <section id="video-stage" class="stage">
-    <video id="invite-video" src="assets/invite-video.mp4" playsinline preload="auto"></video>
-    <button id="tap-to-open" class="tap-overlay" aria-label="Tap to open your invitation">
-      <span class="tap-overlay__text">Tap to Open</span>
-    </button>
-    <button id="skip-video" class="skip-link" hidden>Skip</button>
+  <!-- Preloader: monogram crest, lifts to reveal the envelope -->
+  <div id="preloader" class="preloader">
+    <span class="crest crest--light preloader__crest" data-crest></span>
+    <span class="preloader__line"><i></i></span>
+  </div>
+
+  <div class="grain" aria-hidden="true"></div>
+  <div class="ambient" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"><span id="scroll-progress-bar"></span></div>
+
+  <!-- ============================ HERO: ENVELOPE + PHOTO ============================ -->
+  <section id="hero" class="hero">
+    <div class="hero__pin" id="hero-pin">
+      <div class="envelope-scene" id="envelope-scene">
+        <div class="envelope" id="envelope">
+          <div class="letter" id="letter">
+            <div class="letter__inner">
+              <span class="letter__names-ar" lang="ar" dir="rtl">عمر و سيلين</span>
+              <h1 class="letter__names">Omar &amp; Celeen</h1>
+              <span class="letter__date">Sunday &middot; July 26 &middot; 2026</span>
+            </div>
+          </div>
+          <div class="envelope__back" aria-hidden="true"></div>
+          <div class="envelope__front" aria-hidden="true"></div>
+          <div class="envelope__flap" id="envelope-flap" aria-hidden="true"></div>
+          <div class="envelope__seal" id="envelope-seal" aria-hidden="true">
+            <span class="crest crest--seal" data-crest></span>
+          </div>
+        </div>
+      </div>
+
+      <figure class="hero-photo" id="hero-photo" aria-hidden="false">
+        <img src="assets/couple-1.jpg" alt="Omar and Celeen" onerror="this.onerror=null;this.src='https://picsum.photos/seed/ocportrait/1000/1200'" />
+      </figure>
+
+      <button class="hero__hint" id="hero-hint" type="button" aria-label="Scroll to open the invitation">
+        <span>Scroll to open</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.1"><path d="M12 4v14M6 13l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
   </section>
 
-  <!-- Scenes 6-7 + RSVP + Nqoot -->
-  <main id="main-content" hidden>
+  <!-- ============================ COUNTDOWN (green band) ============================ -->
+  <section id="countdown" class="section section--green">
+    <div class="wrap center">
+      <span class="crest crest--light reveal" data-crest></span>
+      <h2 class="count__ar reveal" lang="ar" dir="rtl">صِرنا لبعض</h2>
 
-    <section class="hero">
-      <h1>Omar &amp; Celeen</h1>
-      <p class="hero__date">July 26, 2026</p>
-      <p class="hero__tagline">Join us as we celebrate our forever.</p>
-    </section>
-
-    <section id="rsvp" class="panel">
-      <h2>RSVP</h2>
-      <p class="panel__intro">Find your name below to confirm your seat.</p>
-
-      <div class="autocomplete">
-        <input type="text" id="rsvp-name" placeholder="Start typing your name…" autocomplete="off" />
-        <ul id="rsvp-suggestions" class="autocomplete__list" hidden></ul>
+      <div class="count reveal" id="count" role="timer" aria-live="off">
+        <div class="count__unit"><span class="count__num" id="cd-days">00</span><span class="count__label">Days</span></div>
+        <div class="count__sep">&middot;</div>
+        <div class="count__unit"><span class="count__num" id="cd-hours">00</span><span class="count__label">Hours</span></div>
+        <div class="count__sep">&middot;</div>
+        <div class="count__unit"><span class="count__num" id="cd-mins">00</span><span class="count__label">Minutes</span></div>
+        <div class="count__sep">&middot;</div>
+        <div class="count__unit"><span class="count__num" id="cd-secs">00</span><span class="count__label">Seconds</span></div>
       </div>
+    </div>
+  </section>
 
-      <button id="rsvp-confirm" class="btn" disabled>Confirm Attendance</button>
-      <p id="rsvp-message" class="panel__message" role="status"></p>
-    </section>
+  <!-- ============================ A MOMENT (photo 2, parallax wipe) ============================ -->
+  <section id="moment" class="section moment">
+    <div class="photo-wipe reveal" id="moment-photo">
+      <img src="assets/couple-2.jpg" alt="Omar and Celeen" loading="lazy" onerror="this.onerror=null;this.src='https://picsum.photos/seed/ocmoment/1400/1000'" />
+    </div>
+    <p class="moment__cap blurin-mini" lang="ar" dir="rtl">كل الحب</p>
+  </section>
 
-    <section id="nqoot" class="panel">
-      <h2>Nqoot</h2>
-      <p class="panel__intro">Your presence is the greatest gift — but if you'd like to honor tradition, you may send one below.</p>
+  <!-- ============================ DETAILS ============================ -->
+  <section id="details" class="section section--cream">
+    <div class="wrap center">
+      <span class="eyebrow reveal">The Details</span>
+      <h2 class="section__title blurin">When &amp; Where</h2>
 
-      <a id="stripe-pay-link" class="btn btn--card" href="https://buy.stripe.com/test_7sY7sL0Fr3Jr4HG6Ye7Vm00" target="_blank" rel="noopener">Pay by Card or Apple Pay</a>
-
-      <div class="or-divider">or</div>
-
-      <div class="zelle-card">
-        <span class="zelle-card__label">Send via Zelle to</span>
-        <button type="button" id="zelle-number" class="zelle-card__number" title="Tap to copy">469-349-3827</button>
-        <span id="zelle-copied" class="zelle-card__copied" hidden>Copied!</span>
+      <div class="detail-grid">
+        <article class="paper-panel paper-panel--card reveal">
+          <span class="detail__k">The Day</span>
+          <p class="detail__big">July 26, 2026</p>
+          <p class="detail__sm">Sunday</p>
+          <span class="detail__ar" lang="ar" dir="rtl">الأحد ٢٦ يوليو</span>
+        </article>
+        <article class="paper-panel paper-panel--card reveal">
+          <span class="detail__k">The Hour</span>
+          <p class="detail__big">7:00 PM</p>
+          <p class="detail__sm">Evening</p>
+          <span class="detail__ar" lang="ar" dir="rtl">السابعة مساءً</span>
+        </article>
+        <article class="paper-panel paper-panel--card reveal">
+          <span class="detail__k">The Place</span>
+          <p class="detail__big">Las Colinas Marriott</p>
+          <p class="detail__sm">Irving, Texas</p>
+          <a class="detail__map mag" href="https://maps.google.com/?q=Dallas+Las+Colinas+Marriott,+223+W+Las+Colinas+Blvd,+Irving,+TX+75039" target="_blank" rel="noopener">
+            View map
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 17L17 7M17 7H9M17 7v8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </article>
       </div>
+    </div>
+  </section>
 
-      <p class="panel__intro">Once you've sent it, let us know so we can thank you personally:</p>
+  <!-- ============================ RSVP + NQOOT — ONE QUESTIONNAIRE ============================ -->
+  <section id="attend" class="section">
+    <div class="wrap wrap--narrow center">
+      <span class="eyebrow reveal">Kindly Respond</span>
+      <h2 class="section__title blurin">Will you join us?</h2>
+      <span class="section__title-ar reveal" lang="ar" dir="rtl">تأكيد الحضور</span>
 
-      <label class="field-label" for="gift-name">Your name</label>
-      <input type="text" id="gift-name" placeholder="Full name" required />
+      <div class="paper-panel paper-panel--form quiz reveal" id="quiz">
 
-      <div class="amount-presets">
-        <button type="button" class="amount-btn" data-amount="50">$50</button>
-        <button type="button" class="amount-btn" data-amount="100">$100</button>
-        <button type="button" class="amount-btn" data-amount="200">$200</button>
+        <!-- Step 1: name -->
+        <div class="q is-active" data-step="name">
+          <p class="q__title">Find your name</p>
+          <div class="autocomplete">
+            <input type="text" id="q-name" placeholder="Start typing…" autocomplete="off" />
+            <ul id="q-suggestions" class="autocomplete__list" hidden></ul>
+          </div>
+          <button class="btn btn--primary btn--full mag" id="q-name-next" disabled>
+            <span>Continue</span><span class="btn__ico">&rarr;</span>
+          </button>
+          <p class="q__err" id="q-name-err" role="status"></p>
+        </div>
+
+        <!-- Step 2: attendance -->
+        <div class="q" data-step="attend" hidden>
+          <p class="q__title">Will you celebrate with us?</p>
+          <p class="q__sub" id="q-attend-sub">We'd be honoured to have you.</p>
+          <div class="q__btns">
+            <button class="pill mag" data-attend="yes">Joyfully, yes</button>
+            <button class="pill pill--ghost mag" data-attend="no">Regretfully, no</button>
+          </div>
+        </div>
+
+        <!-- Step 3: gift? -->
+        <div class="q" data-step="gift" hidden>
+          <p class="q__seat" id="q-seat"></p>
+          <p class="q__title">Would you like to send nqoot? <span class="q__title-ar" lang="ar" dir="rtl">نقوط</span></p>
+          <p class="q__sub">A gift toward our new life together — entirely optional.</p>
+          <div class="q__btns">
+            <button class="pill mag" data-gift="yes">Yes, with love</button>
+            <button class="pill pill--ghost mag" data-gift="no">Not this time</button>
+          </div>
+        </div>
+
+        <!-- Step 4: method -->
+        <div class="q" data-step="method" hidden>
+          <p class="q__title">How would you like to give?</p>
+          <div class="q__btns">
+            <button class="pill mag" data-method="card">Card / Apple Pay</button>
+            <button class="pill mag" data-method="zelle">Zelle</button>
+          </div>
+          <button class="q__back" data-back="gift">&larr; Back</button>
+        </div>
+
+        <!-- Step 5: amount -->
+        <div class="q" data-step="amount" hidden>
+          <p class="q__title">How much would you like to give?</p>
+          <div class="amount-presets">
+            <button type="button" class="amount-btn" data-amount="50">$50</button>
+            <button type="button" class="amount-btn" data-amount="100">$100</button>
+            <button type="button" class="amount-btn" data-amount="200">$200</button>
+            <input type="number" id="q-amount" min="1" step="1" placeholder="Other" />
+          </div>
+          <button class="btn btn--primary btn--full mag" id="q-amount-next">
+            <span>Continue</span><span class="btn__ico">&rarr;</span>
+          </button>
+          <button class="q__back" data-back="method">&larr; Back</button>
+        </div>
+
+        <!-- Step 6: pay -->
+        <div class="q" data-step="pay" hidden>
+          <p class="q__title" id="q-pay-title">Send your gift</p>
+
+          <div id="q-pay-card" hidden>
+            <a id="stripe-pay-link" class="btn btn--primary btn--full mag" href="#" data-placeholder="true" target="_blank" rel="noopener">
+              <span>Pay by Card or Apple Pay</span><span class="btn__ico">&rarr;</span>
+            </a>
+            <p class="card__note" id="stripe-note">The couple's secure card link is added shortly — for now please use Zelle.</p>
+          </div>
+
+          <div id="q-pay-zelle" hidden>
+            <button type="button" id="zelle-number" class="zelle" title="Tap to copy">
+              <span class="zelle__label">Zelle to</span>
+              <span class="zelle__num">469-349-3827</span>
+              <span class="zelle__hint" id="zelle-copied">Tap to copy</span>
+            </button>
+          </div>
+
+          <button class="btn btn--outline btn--full mag" id="q-done"><span>I've sent my gift</span></button>
+          <p class="q__err" id="q-pay-err" role="status"></p>
+          <button class="q__back" data-back="amount">&larr; Back</button>
+        </div>
+
+        <!-- Step 7: thanks -->
+        <div class="q q--thanks" data-step="thanks" hidden>
+          <span class="crest" data-crest></span>
+          <p class="q__title" id="q-thanks-title">Thank you</p>
+          <p class="q__sub" id="q-thanks-sub">We can't wait to celebrate with you.</p>
+          <p class="q__sub" lang="ar" dir="rtl">بانتظاركم</p>
+        </div>
+
       </div>
+    </div>
+  </section>
 
-      <label class="field-label" for="gift-amount">Or enter another amount</label>
-      <input type="number" id="gift-amount" min="1" step="1" placeholder="Amount (USD)" />
+  <!-- ============================ FOOTER ============================ -->
+  <footer class="footer">
+    <span class="crest crest--footer" data-crest></span>
+    <p class="footer__names">Omar &amp; Celeen</p>
+    <p class="footer__date">July 26, 2026 &middot; Irving, Texas</p>
+  </footer>
 
-      <button id="gift-submit" class="btn">I've Sent My Gift</button>
-      <p id="gift-message" class="panel__message" role="status"></p>
-    </section>
-
-    <footer class="footer">
-      <p>We can't wait to celebrate with you.</p>
-      <p class="footer__names">Omar &amp; Celeen</p>
-    </footer>
-
-  </main>
-
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="vendor/SplitText.min.js"></script>
+  <script src="vendor/lenis.min.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
