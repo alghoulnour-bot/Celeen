@@ -85,11 +85,10 @@
     const vh = () => window.innerHeight;
 
     if (prefersReduced) {
-      gsap.set(scene, { scale: 1.08 });
       gsap.set(flap, { autoAlpha: 0 });
       gsap.set(seal, { autoAlpha: 0 });
       gsap.set('.envelope__back, .envelope__front', { autoAlpha: 0 });
-      gsap.set(letter, { xPercent: -50, y: -vh() * 0.2, scale: 1.02, rotationX: -16 });
+      gsap.set(letter, { xPercent: -50, y: -vh() * 0.18, scale: 1.02 });
       gsap.set(photo, { y: vh() * 0.44, opacity: 1 });
       return;
     }
@@ -106,16 +105,12 @@
     });
 
     tl.to('#hero-hint', { autoAlpha: 0, y: 14, duration: 0.3, ease: 'power1.out' }, 0)
-      // Gentle push-in (much subtler now).
-      .to(scene, { scale: 1.08, duration: 2.0, ease: 'power1.inOut' }, 0.1)
       // THE opening — a full 180deg flip about the top edge so the flap swings
-      // all the way up and stands as a triangle ABOVE the envelope (apex up),
-      // linear with scroll so every step visibly moves it.
+      // all the way open, revealing the green liner. Linear with scroll.
       .to(flap, { rotationX: -180, duration: 1.7, ease: 'none' }, 0.15)
       .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.5, ease: 'power1.in' }, 0.15)
-      // Card drawn up and out — flattening (counter the 16deg tilt) so it faces
-      // you, sliding over the top of the standing flap.
-      .to(letter, { xPercent: -50, y: () => -vh() * 0.2, scale: 1.02, rotationX: -16, duration: 1.0, ease: 'power2.out' }, 2.05)
+      // Card drawn up and out of the open envelope.
+      .to(letter, { xPercent: -50, y: () => -vh() * 0.18, scale: 1.02, duration: 1.0, ease: 'power2.out' }, 2.05)
       .to(photo, { y: () => vh() * 0.44, opacity: 1, duration: 1.0, ease: 'power2.out' }, 2.35)
       // Envelope dissolves gently once the card is clear.
       .to(['.envelope__back', '.envelope__front', '.envelope__flap', '#envelope-seal'],
@@ -250,7 +245,31 @@
       renderSuggest(guestNames.filter((n) => n.toLowerCase().includes(q)));
     });
     document.addEventListener('click', (e) => { if (!suggest.contains(e.target) && e.target !== nameInput) suggest.hidden = true; });
-    nameNext.addEventListener('click', () => { if (state.name) goto('attend'); });
+
+    // On continue, check whether they've already RSVP'd. If so, skip the
+    // attendance step and go straight to nqoot (so a returning guest who wants
+    // to give later doesn't have to re-confirm attendance).
+    nameNext.addEventListener('click', async () => {
+      if (!state.name) return;
+      nameNext.disabled = true; nameErr.textContent = '';
+      try {
+        const res = await fetch('/api/respond/status?name=' + encodeURIComponent(state.name));
+        const s = await res.json();
+        if (res.ok) {
+          state.table = s.table; state.partySize = s.partySize;
+          if (s.responded && s.attending) {
+            const seat = document.getElementById('q-seat');
+            seat.textContent = state.partySize > 1
+              ? `Welcome back — confirmed, party of ${state.partySize} · Table ${state.table}`
+              : `Welcome back — you're confirmed · Table ${state.table}`;
+            goto('gift');
+            return;
+          }
+        }
+      } catch (err) { /* fall through to the normal flow */ }
+      finally { nameNext.disabled = false; }
+      goto('attend');
+    });
 
     /* Step 2 — attendance */
     quiz.querySelectorAll('[data-attend]').forEach((btn) => {

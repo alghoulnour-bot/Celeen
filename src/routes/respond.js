@@ -24,6 +24,28 @@ function rateLimit(req, res, next) {
 }
 router.use(rateLimit);
 
+// Look up a guest + any prior response, so a returning guest who already
+// RSVP'd can skip straight to nqoot instead of re-confirming attendance.
+router.get('/status', (req, res) => {
+  const name = req.query.name;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Name is required' });
+  }
+  const guest = findGuestByName(name);
+  if (!guest) {
+    return res.status(404).json({ error: 'Name not found on the guest list' });
+  }
+  const rec = responseStore.get(guest.name);
+  res.json({
+    name: guest.name,
+    table: guest.table,
+    partySize: guest.partySize,
+    responded: !!rec,
+    attending: rec ? rec.attending === true : null,
+    hasGift: !!(rec && rec.giftAmount != null),
+  });
+});
+
 // Step: attendance. Looks the guest up so table/party come from the server,
 // not the client, and records whether they're coming.
 router.post('/attend', (req, res) => {

@@ -28,6 +28,11 @@ function all() {
   return Object.values(readJson(FILE, {}));
 }
 
+function get(name) {
+  if (!name) return null;
+  return readJson(FILE, {})[keyOf(name)] || null;
+}
+
 // Used by the Stripe webhook to attach the *actual* charged amount to whoever
 // the payment link was tagged with (client_reference_id = name). Only records
 // for a known guest, stores under the canonical name, and never overwrites an
@@ -46,4 +51,4 @@ function recordActualPayment(name, actualAmount) {
   return upsert(guest.name, { giftActualAmount: actualAmount, giftPaidAt: new Date().toISOString() });
 }
 
-module.exports = { upsert, all, recordActualPayment, findGuestByName };
+module.exports = { upsert, all, get, recordActualPayment, findGuestByName };
