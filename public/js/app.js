@@ -76,11 +76,20 @@
     const seal = document.getElementById('envelope-seal');
     const scene = document.getElementById('envelope-scene');
     const photo = document.getElementById('hero-photo');
+    const cta = document.getElementById('hero-cta');
     if (!envelope || !letter) return;
+
+    // Jump to the questionnaire when the hero CTA is clicked.
+    if (cta) cta.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (lenis) lenis.scrollTo('#attend', { offset: -20, duration: 1.1 });
+      else document.getElementById('attend').scrollIntoView({ behavior: 'smooth' });
+    });
 
     gsap.set(scene, { xPercent: -50, yPercent: -50 });
     gsap.set(letter, { x: 0, xPercent: -50 });
     gsap.set(photo, { xPercent: -50, y: () => window.innerHeight * 1.05, opacity: 0 });
+    if (cta) gsap.set(cta, { xPercent: -50, autoAlpha: 0, y: 12 });
 
     const vh = () => window.innerHeight;
 
@@ -88,8 +97,9 @@
       gsap.set(flap, { autoAlpha: 0 });
       gsap.set(seal, { autoAlpha: 0 });
       gsap.set('.envelope__back, .envelope__front', { autoAlpha: 0 });
-      gsap.set(letter, { x: 0, xPercent: -50, y: -vh() * 0.18, scale: 1.02 });
-      gsap.set(photo, { y: vh() * 0.44, opacity: 1 });
+      gsap.set(letter, { x: 0, xPercent: -50, y: -vh() * 0.26, scale: 1.02 });
+      gsap.set(photo, { y: vh() * 0.30, opacity: 1 });
+      if (cta) gsap.set(cta, { xPercent: -50, autoAlpha: 1, y: 0 });
       return;
     }
 
@@ -109,10 +119,11 @@
       .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.4, ease: 'power1.in' }, 0.05)
       // Card comes out right after; the envelope dissolves quickly and the
       // photo rises up beneath — all overlapping so it doesn't drag.
-      .to(letter, { x: 0, xPercent: -50, y: () => -vh() * 0.18, scale: 1.02, duration: 0.6, ease: 'power2.out' }, 0.85)
+      .to(letter, { x: 0, xPercent: -50, y: () => -vh() * 0.26, scale: 1.02, duration: 0.6, ease: 'power2.out' }, 0.85)
       .to(['.envelope__back', '.envelope__front', '.envelope__flap', '#envelope-seal'],
           { autoAlpha: 0, duration: 0.4, ease: 'power1.inOut' }, 0.9)
-      .to(photo, { y: () => vh() * 0.44, opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.95);
+      .to(photo, { y: () => vh() * 0.30, opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.95)
+      .to(cta, { autoAlpha: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 1.25);
   }
 
   /* ---------------------------------------------------------- Blur-in ------ */

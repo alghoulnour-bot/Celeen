@@ -253,6 +253,17 @@ img { max-width: 100%; display: block; }
 }
 .hero-photo img { display: block; width: 100%; aspect-ratio: 5 / 6.1; object-fit: cover; }
 
+/* Shortcut button that appears below the photo once the hero has opened */
+.hero-cta {
+  position: absolute; left: 50%; bottom: clamp(1.8rem, 5vh, 3.4rem); z-index: 5; opacity: 0;
+  font-family: var(--sans); font-size: 0.74rem; letter-spacing: 0.2em; text-transform: uppercase;
+  text-decoration: none; color: var(--bone); background: var(--green);
+  padding: 1rem 2rem; border-radius: 999px;
+  box-shadow: 0 16px 30px -16px rgba(44,39,28,0.55);
+  transition: background 0.35s var(--ease), box-shadow 0.35s var(--ease);
+}
+.hero-cta:hover { background: var(--green-deep); box-shadow: 0 18px 34px -14px rgba(44,39,28,0.6); }
+
 .hero__hint {
   position: absolute; bottom: clamp(1.6rem, 5vh, 3rem); left: 50%; transform: translateX(-50%);
   display: inline-flex; flex-direction: column; align-items: center; gap: 0.55rem;
