@@ -79,7 +79,7 @@
     if (!envelope || !letter) return;
 
     gsap.set(scene, { xPercent: -50, yPercent: -50 });
-    gsap.set(letter, { xPercent: -50 });
+    gsap.set(letter, { x: 0, xPercent: -50 });
     gsap.set(photo, { xPercent: -50, y: () => window.innerHeight * 1.05, opacity: 0 });
 
     const vh = () => window.innerHeight;
@@ -88,7 +88,7 @@
       gsap.set(flap, { autoAlpha: 0 });
       gsap.set(seal, { autoAlpha: 0 });
       gsap.set('.envelope__back, .envelope__front', { autoAlpha: 0 });
-      gsap.set(letter, { xPercent: -50, y: -vh() * 0.18, scale: 1.02 });
+      gsap.set(letter, { x: 0, xPercent: -50, y: -vh() * 0.18, scale: 1.02 });
       gsap.set(photo, { y: vh() * 0.44, opacity: 1 });
       return;
     }
@@ -109,7 +109,7 @@
       .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.4, ease: 'power1.in' }, 0.05)
       // Card comes out right after; the envelope dissolves quickly and the
       // photo rises up beneath — all overlapping so it doesn't drag.
-      .to(letter, { xPercent: -50, y: () => -vh() * 0.18, scale: 1.02, duration: 0.6, ease: 'power2.out' }, 0.85)
+      .to(letter, { x: 0, xPercent: -50, y: () => -vh() * 0.18, scale: 1.02, duration: 0.6, ease: 'power2.out' }, 0.85)
       .to(['.envelope__back', '.envelope__front', '.envelope__flap', '#envelope-seal'],
           { autoAlpha: 0, duration: 0.4, ease: 'power1.inOut' }, 0.9)
       .to(photo, { y: () => vh() * 0.44, opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.95);

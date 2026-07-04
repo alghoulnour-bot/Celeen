@@ -153,9 +153,10 @@ img { max-width: 100%; display: block; }
   position: relative; width: min(92vw, 640px); height: min(57vw, 420px);
   transform-style: preserve-3d;
 }
-/* Centering is handled by GSAP (xPercent:-50) — no CSS translate here, or the
-   two stack and shove the card off-centre. */
-.letter { position: absolute; left: 50%; top: 15%; width: 82%; z-index: 2; will-change: transform; }
+/* Centred in CSS too, so it's not off-screen for a frame before JS runs. GSAP
+   zeroes its px `x` when it takes over (x:0, xPercent:-50) so the two don't
+   stack. */
+.letter { position: absolute; left: 50%; top: 15%; width: 82%; transform: translateX(-50%); z-index: 2; will-change: transform; }
 .letter__inner {
   background: var(--paper-tex), linear-gradient(180deg, var(--paper), #F3ECDA);
   background-blend-mode: soft-light; background-size: 150px, cover;
