@@ -146,14 +146,16 @@ img { max-width: 100%; display: block; }
 .envelope-scene {
   position: absolute; left: 50%; top: 50%;
   transform: translate(-50%, -50%); /* centered from first paint, before JS runs */
-  perspective: 2000px; perspective-origin: 50% 34%;
+  perspective: 3400px; perspective-origin: 50% 42%;
   will-change: transform;
 }
 .envelope {
-  position: relative; width: min(92vw, 660px); height: min(58vw, 436px);
+  position: relative; width: min(92vw, 640px); height: min(57vw, 420px);
   transform-style: preserve-3d;
 }
-.letter { position: absolute; left: 50%; top: 15%; width: 82%; transform: translateX(-50%); z-index: 2; will-change: transform; }
+/* Centering is handled by GSAP (xPercent:-50) — no CSS translate here, or the
+   two stack and shove the card off-centre. */
+.letter { position: absolute; left: 50%; top: 15%; width: 82%; z-index: 2; will-change: transform; }
 .letter__inner {
   background: var(--paper-tex), linear-gradient(180deg, var(--paper), #F3ECDA);
   background-blend-mode: soft-light; background-size: 150px, cover;
@@ -215,28 +217,33 @@ img { max-width: 100%; display: block; }
   display: flex; align-items: center; justify-content: center;
 }
 
-/* ---- Old-money gallery frame + vintage/polaroid photo treatment --------- */
+/* ---- Old-money molding frame (tone-on-tone recessed panel, like wainscoting)
+   + a light vintage film grade on the photo. --------------------------------- */
 .frame {
   position: relative;
-  padding: clamp(10px, 1.3vw, 16px); /* linen mat */
-  background: var(--paper-tex), linear-gradient(160deg, #F1EAD7, #E4D9C0);
+  padding: clamp(20px, 3vw, 44px); /* the mat / wall around the recessed panel */
+  background: var(--paper-tex), linear-gradient(158deg, #EEE7D4, #E3DAC2);
   background-blend-mode: soft-light; background-size: 120px, cover;
-  border: clamp(8px, 1vw, 13px) solid transparent;
-  border-image: linear-gradient(135deg, #B89C5E 0%, #7E6A3E 24%, #E7D3A2 50%, #7E6A3E 76%, #B89C5E 100%) 1;
-  box-shadow: 0 40px 70px -34px rgba(44,39,28,0.6), 0 5px 12px -5px rgba(44,39,28,0.45);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.5),
+    inset 0 0 0 2px rgba(44,39,28,0.05),
+    0 46px 78px -44px rgba(44,39,28,0.4);
 }
-.frame::before { /* inner gold fillet line around the image */
-  content: ""; position: absolute; inset: clamp(10px, 1.3vw, 16px);
-  border: 1.5px solid rgba(126,106,62,0.65); pointer-events: none; z-index: 3;
+/* Outer molding line */
+.frame::before {
+  content: ""; position: absolute; inset: clamp(9px, 1.3vw, 18px);
+  border: 1px solid rgba(44,39,28,0.10);
+  box-shadow: inset 1.5px 1.5px 2px rgba(44,39,28,0.10), inset -1.5px -1.5px 2px rgba(255,255,255,0.7);
+  pointer-events: none; z-index: 3;
 }
-.frame::after { /* vignette + warm film wash over the image */
-  content: ""; position: absolute; inset: clamp(10px, 1.3vw, 16px); z-index: 2; pointer-events: none;
-  background:
-    radial-gradient(125% 100% at 50% 38%, transparent 52%, rgba(38,28,14,0.34) 100%),
-    linear-gradient(rgba(120,88,44,0.12), rgba(70,58,32,0.14));
-  mix-blend-mode: multiply;
+/* Inner molding line hugging the photo — the recessed panel edge */
+.frame::after {
+  content: ""; position: absolute; inset: clamp(13px, 2vw, 30px);
+  border: 1px solid rgba(44,39,28,0.14);
+  box-shadow: inset -1.5px -1.5px 2px rgba(44,39,28,0.10), inset 1.5px 1.5px 2px rgba(255,255,255,0.65);
+  pointer-events: none; z-index: 3;
 }
-.frame img { filter: sepia(0.3) saturate(0.8) contrast(0.9) brightness(1.06); }
+.frame img { filter: sepia(0.16) saturate(0.92) contrast(0.97) brightness(1.03); }
 
 .hero-photo {
   position: absolute; left: 50%; top: 0;

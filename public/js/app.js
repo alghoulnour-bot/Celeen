@@ -85,7 +85,7 @@
     const vh = () => window.innerHeight;
 
     if (prefersReduced) {
-      gsap.set(scene, { scale: 1.2 });
+      gsap.set(scene, { scale: 1.08 });
       gsap.set(flap, { autoAlpha: 0 });
       gsap.set(seal, { autoAlpha: 0 });
       gsap.set('.envelope__back, .envelope__front', { autoAlpha: 0 });
@@ -95,29 +95,29 @@
     }
 
     const tl = gsap.timeline({
-      defaults: { ease: 'none' },
       scrollTrigger: {
-        trigger: '#hero', start: 'top top', end: '+=2900',
-        pin: '#hero-pin', scrub: 1, invalidateOnRefresh: true,
-        onUpdate: (self) => { flap.style.zIndex = self.progress > 0.30 ? '1' : '6'; },
+        trigger: '#hero', start: 'top top', end: '+=3000',
+        pin: '#hero-pin', scrub: 0.3, invalidateOnRefresh: true,
+        // Flap stays IN FRONT of the card while lifting (hiding it and
+        // physically uncovering it as it rotates); once past vertical it drops
+        // BEHIND so the card slides out on top of the standing flap.
+        onUpdate: (self) => { flap.style.zIndex = self.progress > 0.44 ? '1' : '6'; },
       },
     });
 
-    tl.to('#hero-hint', { autoAlpha: 0, y: 14, duration: 0.35 }, 0)
-      // 1) Zoom in — the camera pushes toward the envelope, "entering" it.
-      .to(scene, { scale: 1.2, duration: 1.8, ease: 'power1.inOut' }, 0.1)
-      // 2) The flap lifts open and stands open (green liner facing out), not
-      //    folded flat/invisible.
-      .to(flap, { rotationX: -142, duration: 1.3, ease: 'power2.inOut' }, 0.2)
-      .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.55, ease: 'power1.in' }, 0.25)
-      // 3) Hold — the envelope sits fully open (lining + card visible inside)
-      //    while the zoom finishes, before the card is drawn out.
-      .to(letter, { xPercent: -50, y: () => -vh() * 0.16, scale: 1.0, duration: 1.0, ease: 'power2.out' }, 2.0)
-      // 4) Photo rises to sit right beneath the card.
-      .to(photo, { y: () => vh() * 0.44, opacity: 1, duration: 1.0, ease: 'power2.out' }, 2.3)
-      // 5) The envelope shell dissolves together, gently, once the card is clear.
+    tl.to('#hero-hint', { autoAlpha: 0, y: 14, duration: 0.3, ease: 'power1.out' }, 0)
+      // Gentle push-in (much subtler now).
+      .to(scene, { scale: 1.08, duration: 2.0, ease: 'power1.inOut' }, 0.1)
+      // THE opening — linear with scroll so every step visibly rotates the
+      // flap open, revealing the green liner. No easing = even, frame-by-frame.
+      .to(flap, { rotationX: -140, duration: 1.7, ease: 'none' }, 0.15)
+      .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.5, ease: 'power1.in' }, 0.15)
+      // Card drawn up and out over the top of the open flap.
+      .to(letter, { xPercent: -50, y: () => -vh() * 0.16, scale: 1.0, duration: 1.0, ease: 'power2.out' }, 2.05)
+      .to(photo, { y: () => vh() * 0.44, opacity: 1, duration: 1.0, ease: 'power2.out' }, 2.35)
+      // Envelope dissolves gently once the card is clear.
       .to(['.envelope__back', '.envelope__front', '.envelope__flap', '#envelope-seal'],
-          { autoAlpha: 0, duration: 0.95, ease: 'power1.inOut' }, 2.4);
+          { autoAlpha: 0, duration: 0.95, ease: 'power1.inOut' }, 2.5);
   }
 
   /* ---------------------------------------------------------- Blur-in ------ */
