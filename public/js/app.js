@@ -10,6 +10,12 @@
   const hasGSAP = typeof gsap !== 'undefined';
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+  // Always begin at the top (the envelope) on load/refresh — don't let the
+  // browser restore a mid-page scroll position.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
+  window.addEventListener('beforeunload', () => window.scrollTo(0, 0));
+
   /* ------------------------------------------------- O&C olive crest ------- */
   const CREST_SPRIG =
     '<path d="M62 96 C 42 92, 27 78, 20 58"/>' +

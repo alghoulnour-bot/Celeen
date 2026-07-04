@@ -110,7 +110,10 @@ img { max-width: 100%; display: block; }
 .crest--footer .crest__svg { width: 96px; }
 
 /* ============================ DECKLED PAPER PANEL ======================== */
-.paper-panel { position: relative; background: transparent; padding: clamp(2rem, 4vw, 3rem); border-radius: 4px; }
+/* isolation keeps the negative-z deckle/frame pseudo-elements contained in the
+   panel's own stacking context, so the box never falls behind the section
+   background when the reveal animation's filter is removed. */
+.paper-panel { position: relative; isolation: isolate; background: transparent; padding: clamp(2rem, 4vw, 3rem); border-radius: 4px; }
 .paper-panel::before {
   content: ""; position: absolute; inset: 0; z-index: -2;
   background: linear-gradient(168deg, var(--paper), #F5EEDD); border-radius: 4px;
@@ -131,6 +134,7 @@ img { max-width: 100%; display: block; }
 }
 .envelope-scene {
   position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%); /* centered from first paint, before JS runs */
   perspective: 2000px; perspective-origin: 50% 34%;
   will-change: transform;
 }
