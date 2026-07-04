@@ -212,7 +212,7 @@
 
     const steps = {};
     quiz.querySelectorAll('.q').forEach((q) => { steps[q.dataset.step] = q; });
-    const state = { name: null, table: null, partySize: null, method: null, amount: null };
+    const state = { name: null, table: null, partySize: null, method: null, amount: null, members: [] };
 
     function goto(step) {
       Object.values(steps).forEach((q) => { q.classList.remove('is-active'); q.hidden = true; });
@@ -231,6 +231,32 @@
         const el = document.getElementById(id);
         if (el) { el.textContent = s; el.hidden = !s; }
       });
+    }
+    function hideSeat() {
+      ['q-seat', 'q-thanks-seat'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = ''; el.hidden = true; }
+      });
+    }
+
+    // Enter the nqoot step — offered whether or not they're attending, so a
+    // guest who can't come can still give. Sets the right seat/notes + the
+    // default thank-you copy (overridden later if they actually gift).
+    function enterGift(attending) {
+      state.attending = attending;
+      const note = document.getElementById('q-gift-note');
+      if (attending) {
+        setSeat();
+        if (note) note.hidden = true;
+        document.getElementById('q-thanks-title').textContent = 'Thank you';
+        document.getElementById('q-thanks-sub').textContent = "We can't wait to celebrate with you.";
+      } else {
+        hideSeat();
+        if (note) { note.textContent = "We'll miss you — but you can still send nqoot if you'd like."; note.hidden = false; }
+        document.getElementById('q-thanks-title').textContent = 'We’ll miss you';
+        document.getElementById('q-thanks-sub').textContent = 'Thank you for letting us know.';
+      }
+      goto('gift');
     }
 
     async function post(path, body) {
@@ -267,48 +293,63 @@
     });
     document.addEventListener('click', (e) => { if (!suggest.contains(e.target) && e.target !== nameInput) suggest.hidden = true; });
 
-    // On continue, check whether they've already RSVP'd. If so, skip the
-    // attendance step and go straight to nqoot (so a returning guest who wants
-    // to give later doesn't have to re-confirm attendance).
+    // On continue, look up the whole party. If this person already responded,
+    // skip straight to nqoot; otherwise show the "who's coming" checklist.
     nameNext.addEventListener('click', async () => {
       if (!state.name) return;
       nameNext.disabled = true; nameErr.textContent = '';
       try {
-        const res = await fetch('/api/respond/status?name=' + encodeURIComponent(state.name));
-        const s = await res.json();
-        if (res.ok) {
-          state.table = s.table; state.partySize = s.partySize;
-          if (s.responded && s.attending) {
-            setSeat();
-            goto('gift');
-            return;
-          }
-        }
-      } catch (err) { /* fall through to the normal flow */ }
-      finally { nameNext.disabled = false; }
-      goto('attend');
+        const res = await fetch('/api/respond/party?name=' + encodeURIComponent(state.name));
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+        state.table = data.table;
+        state.partySize = data.size;
+        state.members = data.members.map((m) => ({ name: m.name, attending: m.responded ? m.attending : true }));
+        const me = data.members.find((m) => m.name.toLowerCase() === state.name.toLowerCase());
+        if (me && me.responded) { enterGift(me.attending); return; }
+        document.getElementById('q-party-table').textContent = 'Table ' + data.table;
+        buildMembers();
+        goto('party');
+      } catch (err) {
+        nameErr.textContent = err.message;
+      } finally {
+        nameNext.disabled = false;
+      }
     });
 
-    /* Step 2 — attendance */
-    quiz.querySelectorAll('[data-attend]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const attending = btn.dataset.attend === 'yes';
-        try {
-          const data = await post('attend', { name: state.name, attending });
-          state.table = data.table; state.partySize = data.partySize;
-          if (attending) {
-            setSeat();
-            goto('gift');
-          } else {
-            document.getElementById('q-thanks-title').textContent = 'We’ll miss you';
-            document.getElementById('q-thanks-sub').textContent = 'Thank you for letting us know.';
-            goto('thanks');
-          }
-        } catch (err) {
-          const sub = document.getElementById('q-attend-sub');
-          sub.textContent = err.message;
-        }
+    /* Step 2 — who's coming (party checklist) */
+    function buildMembers() {
+      const wrap = document.getElementById('q-members');
+      wrap.innerHTML = '';
+      state.members.forEach((m) => {
+        const row = document.createElement('div');
+        row.className = 'member';
+        row.innerHTML = '<span class="member__name"></span>'
+          + '<div class="member__seg"><button type="button" data-att="yes">Coming</button>'
+          + '<button type="button" data-att="no">Can’t</button></div>';
+        row.querySelector('.member__name').textContent = m.name;
+        const yes = row.querySelector('[data-att="yes"]');
+        const no = row.querySelector('[data-att="no"]');
+        const paint = () => { yes.classList.toggle('is-on', m.attending); no.classList.toggle('is-on', !m.attending); };
+        yes.addEventListener('click', () => { m.attending = true; paint(); });
+        no.addEventListener('click', () => { m.attending = false; paint(); });
+        paint();
+        wrap.appendChild(row);
       });
+    }
+
+    const partyNext = document.getElementById('q-party-next');
+    const partyErr = document.getElementById('q-party-err');
+    partyNext.addEventListener('click', async () => {
+      partyNext.disabled = true; partyErr.textContent = '';
+      try {
+        await post('party', { members: state.members });
+        const me = state.members.find((m) => m.name.toLowerCase() === state.name.toLowerCase());
+        enterGift(me ? me.attending : true);
+      } catch (err) {
+        partyErr.textContent = err.message;
+        partyNext.disabled = false;
+      }
     });
 
     /* Step 3 — gift? */

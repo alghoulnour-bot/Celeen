@@ -1,15 +1,13 @@
 const express = require('express');
-const { findGuestByName } = require('../guestStore');
+const { findPartyByMemberName, findGuestByName } = require('../guestStore');
 const responseStore = require('../responseStore');
 
 const router = express.Router();
 
 // Lightweight in-memory rate limit (per IP) to blunt mass/scripted tampering.
-// This is an open, name-based wedding RSVP by design — no per-guest login — so
-// this is the proportionate control rather than authenticating every guest.
 const HITS = new Map();
 const WINDOW_MS = 60 * 1000;
-const MAX_HITS = 30;
+const MAX_HITS = 40;
 function rateLimit(req, res, next) {
   const ip = req.ip || req.connection.remoteAddress || 'unknown';
   const now = Date.now();
@@ -24,63 +22,73 @@ function rateLimit(req, res, next) {
 }
 router.use(rateLimit);
 
-// Look up a guest + any prior response, so a returning guest who already
-// RSVP'd can skip straight to nqoot instead of re-confirming attendance.
-router.get('/status', (req, res) => {
-  const name = req.query.name;
-  if (!name || !name.trim()) {
-    return res.status(400).json({ error: 'Name is required' });
-  }
-  const guest = findGuestByName(name);
-  if (!guest) {
+function norm(s) { return String(s || '').trim().toLowerCase(); }
+
+// Look up a whole party by any member's name — returns every member with their
+// table and any prior attendance, so one person can RSVP for the household.
+router.get('/party', (req, res) => {
+  const party = findPartyByMemberName(req.query.name);
+  if (!party) {
     return res.status(404).json({ error: 'Name not found on the guest list' });
   }
+  const responded = {};
+  responseStore.all().forEach((r) => { responded[norm(r.name)] = r; });
+  const members = party.members.map((m) => {
+    const rec = responded[norm(m)];
+    return { name: m, attending: rec ? rec.attending === true : null, responded: !!rec };
+  });
+  res.json({ table: party.table, size: party.members.length, members });
+});
+
+// Record attendance for one or more members of a single party.
+router.post('/party', (req, res) => {
+  const submitted = (req.body || {}).members;
+  if (!Array.isArray(submitted) || !submitted.length) {
+    return res.status(400).json({ error: 'No members provided' });
+  }
+  // All submitted names must belong to ONE party (prevents marking arbitrary people).
+  const party = findPartyByMemberName(submitted[0].name);
+  if (!party) return res.status(404).json({ error: 'Name not found on the guest list' });
+  const partyNames = new Set(party.members.map(norm));
+
+  for (const m of submitted) {
+    if (!m || !partyNames.has(norm(m.name))) {
+      return res.status(400).json({ error: 'A name is not part of this party' });
+    }
+    if (typeof m.attending !== 'boolean') {
+      return res.status(400).json({ error: 'attending must be true or false' });
+    }
+  }
+  submitted.forEach((m) => {
+    const guest = findGuestByName(m.name);
+    responseStore.upsert(guest.name, {
+      attending: m.attending,
+      table: guest.table,
+      partySize: guest.partySize,
+      party: guest.party,
+    });
+  });
+  res.json({ table: party.table });
+});
+
+// Whether a single person already responded (for the returning-guest fast path).
+router.get('/status', (req, res) => {
+  const guest = findGuestByName(req.query.name);
+  if (!guest) return res.status(404).json({ error: 'Name not found on the guest list' });
   const rec = responseStore.get(guest.name);
   res.json({
     name: guest.name,
     table: guest.table,
-    partySize: guest.partySize,
     responded: !!rec,
     attending: rec ? rec.attending === true : null,
-    hasGift: !!(rec && rec.giftAmount != null),
   });
 });
 
-// Step: attendance. Looks the guest up so table/party come from the server,
-// not the client, and records whether they're coming.
-router.post('/attend', (req, res) => {
-  const { name, attending } = req.body || {};
-  if (!name || !name.trim()) {
-    return res.status(400).json({ error: 'Name is required' });
-  }
-  if (typeof attending !== 'boolean') {
-    return res.status(400).json({ error: 'attending must be true or false' });
-  }
-  const guest = findGuestByName(name);
-  if (!guest) {
-    return res.status(404).json({ error: 'Name not found on the guest list' });
-  }
-  responseStore.upsert(guest.name, {
-    attending,
-    table: guest.table,
-    partySize: guest.partySize,
-  });
-  res.json({ table: guest.table, partySize: guest.partySize });
-});
-
-// Step: gift (nqoot). Records the chosen method + self-reported amount.
-// The name is validated against the guest list (same as /attend) and the
-// canonical list value — not the raw client string — is what gets stored,
-// so untrusted free text never reaches the admin dashboard.
+// Gift (nqoot) — accumulates onto any previous amount.
 router.post('/gift', (req, res) => {
   const { name, method, amount } = req.body || {};
-  if (!name || !name.trim()) {
-    return res.status(400).json({ error: 'Name is required' });
-  }
   const guest = findGuestByName(name);
-  if (!guest) {
-    return res.status(404).json({ error: 'Name not found on the guest list' });
-  }
+  if (!guest) return res.status(404).json({ error: 'Name not found on the guest list' });
   if (method !== 'zelle' && method !== 'card') {
     return res.status(400).json({ error: 'Choose a payment method' });
   }

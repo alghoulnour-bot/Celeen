@@ -145,19 +145,21 @@
           <p class="q__err" id="q-name-err" role="status"></p>
         </div>
 
-        <!-- Step 2: attendance -->
-        <div class="q" data-step="attend" hidden>
-          <p class="q__title">Will you celebrate with us?</p>
-          <p class="q__sub" id="q-attend-sub">We'd be honoured to have you.</p>
-          <div class="q__btns">
-            <button class="pill mag" data-attend="yes">Joyfully, yes</button>
-            <button class="pill pill--ghost mag" data-attend="no">Regretfully, no</button>
-          </div>
+        <!-- Step 2: who's coming (party checklist) -->
+        <div class="q" data-step="party" hidden>
+          <p class="q__title">Who's coming?</p>
+          <p class="q__seat" id="q-party-table"></p>
+          <div class="member-list" id="q-members"></div>
+          <button class="btn btn--primary btn--full mag" id="q-party-next">
+            <span>Confirm</span><span class="btn__ico">&rarr;</span>
+          </button>
+          <p class="q__err" id="q-party-err" role="status"></p>
         </div>
 
         <!-- Step 3: gift? -->
         <div class="q" data-step="gift" hidden>
           <p class="q__seat" id="q-seat"></p>
+          <p class="q__sub" id="q-gift-note" hidden></p>
           <p class="q__title">Would you like to send nqoot? <span class="q__title-ar" lang="ar" dir="rtl">نقوط</span></p>
           <div class="q__btns">
             <button class="pill mag" data-gift="yes">Yes, with love</button>

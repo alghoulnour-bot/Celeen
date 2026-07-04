@@ -1,68 +1,86 @@
-const seedGuests = require('./guests');
+const seedParties = require('./guests');
 const { readJson, writeJson } = require('./store');
 
-const FILE = 'guests.json';
+const FILE = 'parties.json';
 
-// Guest list is stored in data/guests.json so it can be edited at runtime from
-// the admin editor. On first run it's seeded from src/guests.js.
-function loadGuests() {
-  const existing = readJson(FILE, null);
-  if (existing && Array.isArray(existing)) return existing;
-  writeJson(FILE, seedGuests);
-  return seedGuests.slice();
+function norm(s) {
+  return String(s || '').trim().toLowerCase();
 }
 
-function saveGuests(list) {
+// Parties are stored in data/parties.json so the list can be edited at runtime
+// from the admin editor. Seeded from src/guests.js on first run.
+function loadParties() {
+  const existing = readJson(FILE, null);
+  if (existing && Array.isArray(existing)) return existing;
+  const seeded = seedParties.map((p, i) => ({
+    id: 'p' + (i + 1),
+    table: Number(p.table),
+    members: (p.members || []).map((m) => String(m).trim()).filter(Boolean),
+  }));
+  writeJson(FILE, seeded);
+  return seeded;
+}
+
+function saveParties(list) {
   writeJson(FILE, list);
 }
 
-function norm(name) {
-  return String(name || '').trim().toLowerCase();
+function getParties() {
+  return loadParties();
 }
 
-function getGuests() {
-  return loadGuests();
-}
-
+// Flat list of every member name — used for the RSVP search autocomplete.
 function getGuestNames() {
-  return loadGuests().map((g) => g.name);
+  const names = [];
+  loadParties().forEach((p) => p.members.forEach((m) => names.push(m)));
+  return names;
 }
 
+function findPartyByMemberName(name) {
+  const t = norm(name);
+  return loadParties().find((p) => p.members.some((m) => norm(m) === t)) || null;
+}
+
+// Guest-like lookup (name/table/partySize) for a single member — used by the
+// gift + webhook paths.
 function findGuestByName(name) {
-  const target = norm(name);
-  return loadGuests().find((g) => norm(g.name) === target) || null;
+  const party = findPartyByMemberName(name);
+  if (!party) return null;
+  const member = party.members.find((m) => norm(m) === norm(name));
+  return { name: member, table: party.table, partySize: party.members.length, party: party.id };
 }
 
-// Add a guest (used by the admin editor). Returns { error } or { guest }.
-function addGuest({ name, table, partySize }) {
-  const cleanName = String(name || '').trim();
-  if (!cleanName) return { error: 'Name is required' };
+// Add a party (table + members). Used by the admin editor.
+function addParty({ table, members }) {
   const t = Number(table);
-  const p = Number(partySize);
   if (!Number.isFinite(t) || t <= 0) return { error: 'Table must be a positive number' };
-  if (!Number.isFinite(p) || p <= 0) return { error: 'Party size must be a positive number' };
+  const list = (Array.isArray(members) ? members : String(members || '').split(/[\n,]/))
+    .map((m) => String(m).trim()).filter(Boolean);
+  if (!list.length) return { error: 'Add at least one name' };
 
-  const list = loadGuests();
-  if (list.some((g) => norm(g.name) === norm(cleanName))) {
-    return { error: 'A guest with that name already exists' };
-  }
-  const guest = { name: cleanName, table: t, partySize: p };
-  list.push(guest);
-  saveGuests(list);
-  return { guest };
+  const taken = new Set(getGuestNames().map(norm));
+  const dup = list.find((m) => taken.has(norm(m)));
+  if (dup) return { error: `"${dup}" is already on the guest list` };
+
+  const parties = loadParties();
+  const party = { id: 'p' + Date.now(), table: t, members: list };
+  parties.push(party);
+  saveParties(parties);
+  return { party };
 }
 
-function removeGuest(name) {
-  const list = loadGuests();
-  const next = list.filter((g) => norm(g.name) !== norm(name));
-  saveGuests(next);
-  return next.length !== list.length;
+function removeParty(id) {
+  const parties = loadParties();
+  const next = parties.filter((p) => p.id !== id);
+  saveParties(next);
+  return next.length !== parties.length;
 }
 
 module.exports = {
-  getGuests,
+  getParties,
   getGuestNames,
+  findPartyByMemberName,
   findGuestByName,
-  addGuest,
-  removeGuest,
+  addParty,
+  removeParty,
 };

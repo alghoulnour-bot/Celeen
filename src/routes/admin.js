@@ -64,15 +64,17 @@ router.get('/', guard, (req, res) => {
     ? rows.map((r) => `<tr>${COLUMNS.map(([k]) => `<td>${esc(cell(r[k], k))}</td>`).join('')}</tr>`).join('')
     : `<tr><td colspan="${COLUMNS.length}" class="empty">No responses yet.</td></tr>`;
 
-  const guests = guestStore.getGuests();
+  const parties = guestStore.getParties();
   const respondedNames = new Set(rows.map((r) => String(r.name).toLowerCase()));
-  const guestRows = guests.length
-    ? guests.map((g) => `<tr>
-        <td>${esc(g.name)}</td><td>${esc(g.table)}</td><td>${esc(g.partySize)}</td>
-        <td>${respondedNames.has(String(g.name).toLowerCase()) ? 'responded' : '—'}</td>
-        <td><button class="rm" data-name="${esc(g.name)}">Remove</button></td>
+  const totalGuests = parties.reduce((n, p) => n + p.members.length, 0);
+  const partyRows = parties.length
+    ? parties.map((p) => `<tr>
+        <td>${esc(p.table)}</td>
+        <td>${p.members.map((m) => (respondedNames.has(String(m).toLowerCase())
+          ? `<b>${esc(m)}</b>` : esc(m))).join(', ')}</td>
+        <td><button class="rm" data-id="${esc(p.id)}">Remove</button></td>
       </tr>`).join('')
-    : `<tr><td colspan="5" class="empty">No guests yet.</td></tr>`;
+    : `<tr><td colspan="3" class="empty">No guests yet.</td></tr>`;
 
   res.send(`<!doctype html><html><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -98,9 +100,9 @@ router.get('/', guard, (req, res) => {
   tr:last-child td{border-bottom:none;}
   .empty{text-align:center;color:#a99;padding:2rem;}
   form.add{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center;}
-  form.add input{font-family:'Cormorant Garamond',serif;font-size:1rem;padding:.55rem .8rem;border:1px solid var(--line);border-radius:8px;background:#fff;}
-  form.add input[name=name]{flex:1;min-width:180px;}
-  form.add input[type=number]{width:110px;}
+  form.add input,form.add textarea{font-family:'Cormorant Garamond',serif;font-size:1rem;padding:.55rem .8rem;border:1px solid var(--line);border-radius:8px;background:#fff;}
+  form.add textarea{flex:1;min-width:220px;resize:vertical;font-family:inherit;}
+  form.add input[type=number]{width:100px;align-self:flex-start;}
   form.add button{background:var(--green);color:var(--bone);border:none;border-radius:8px;padding:.6rem 1.1rem;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;}
   button.rm{background:none;border:1px solid var(--line);border-radius:6px;color:#9a5a3a;font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.35rem .7rem;cursor:pointer;}
   button.rm:hover{border-color:#9a5a3a;}
@@ -122,18 +124,17 @@ router.get('/', guard, (req, res) => {
     <tbody>${body}</tbody>
   </table></div>
 
-  <h2>Guest List <span style="color:#786;font-size:1rem;">(${guests.length})</span></h2>
-  <p style="font-family:Arial;font-size:.8rem;color:#786;margin-bottom:.8rem;">Add guests here so they can find themselves in the RSVP search. Table &amp; party size show on their card and in the CSV.</p>
+  <h2>Guest List <span style="color:#786;font-size:1rem;">(${parties.length} parties · ${totalGuests} guests)</span></h2>
+  <p style="font-family:Arial;font-size:.8rem;color:#786;margin-bottom:.8rem;">Add a party (a household at one table). List every member — any of them can type their name to RSVP for the whole party and mark who's coming. <b>Bold</b> = already responded.</p>
   <form class="add" id="add-form">
-    <input name="name" placeholder="Full name" autocomplete="off" required />
-    <input name="table" type="number" min="1" placeholder="Table" required />
-    <input name="partySize" type="number" min="1" placeholder="Party size" required />
-    <button type="submit">Add guest</button>
+    <input name="table" type="number" min="1" placeholder="Table #" required />
+    <textarea name="members" placeholder="One name per line&#10;Layla Nassar&#10;Omar Nassar" rows="3" required></textarea>
+    <button type="submit">Add party</button>
   </form>
   <p class="msg" id="msg"></p>
   <div class="wrap"><table>
-    <thead><tr><th>Name</th><th>Table</th><th>Party</th><th>RSVP</th><th></th></tr></thead>
-    <tbody>${guestRows}</tbody>
+    <thead><tr><th>Table</th><th>Members</th><th></th></tr></thead>
+    <tbody>${partyRows}</tbody>
   </table></div>
 
   <script>
@@ -146,16 +147,17 @@ router.get('/', guard, (req, res) => {
     document.getElementById('add-form').addEventListener('submit', function(e){
       e.preventDefault();
       var f = e.target;
-      api('guests/add', { name:f.name.value, table:f.table.value, partySize:f.partySize.value })
+      var members = f.members.value.split(/\\n/).map(function(s){return s.trim();}).filter(Boolean);
+      api('party/add', { table:f.table.value, members:members })
         .then(function(res){
-          if(!res.ok){ document.getElementById('msg').textContent = res.d.error || 'Could not add guest.'; return; }
+          if(!res.ok){ document.getElementById('msg').textContent = res.d.error || 'Could not add party.'; return; }
           location.reload();
         });
     });
     Array.prototype.forEach.call(document.querySelectorAll('.rm'), function(btn){
       btn.addEventListener('click', function(){
-        if(!confirm('Remove '+btn.dataset.name+' from the guest list?')) return;
-        api('guests/remove', { name: btn.dataset.name }).then(function(){ location.reload(); });
+        if(!confirm('Remove this party from the guest list?')) return;
+        api('party/remove', { id: btn.dataset.id }).then(function(){ location.reload(); });
       });
     });
   </script>
@@ -172,16 +174,16 @@ router.get('/export', guard, (req, res) => {
   res.send(csv);
 });
 
-// Guest editor — add / remove guests at runtime (persisted to data/guests.json).
-router.post('/guests/add', guard, express.json(), (req, res) => {
-  const { name, table, partySize } = req.body || {};
-  const result = guestStore.addGuest({ name, table, partySize });
+// Guest editor — add / remove parties at runtime (persisted to data/parties.json).
+router.post('/party/add', guard, express.json(), (req, res) => {
+  const { table, members } = req.body || {};
+  const result = guestStore.addParty({ table, members });
   if (result.error) return res.status(400).json({ error: result.error });
-  res.json({ ok: true, guest: result.guest });
+  res.json({ ok: true, party: result.party });
 });
 
-router.post('/guests/remove', guard, express.json(), (req, res) => {
-  const removed = guestStore.removeGuest((req.body || {}).name);
+router.post('/party/remove', guard, express.json(), (req, res) => {
+  const removed = guestStore.removeParty((req.body || {}).id);
   res.json({ ok: removed });
 });
 

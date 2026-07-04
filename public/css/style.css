@@ -339,6 +339,15 @@ img { max-width: 100%; display: block; }
 }
 .pill--ghost:hover { background: transparent; border-color: var(--gold); color: var(--gold-deep); box-shadow: none; }
 
+/* Party checklist — one row per member with a Coming / Can't toggle */
+.member-list { display: flex; flex-direction: column; gap: 0.65rem; margin: 1.6rem 0 0.4rem; text-align: left; }
+.member { display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--bone); border: 1px solid var(--line); border-radius: 10px; padding: 0.65rem 0.7rem 0.65rem 1.1rem; }
+.member__name { font-family: var(--serif); font-size: clamp(1.05rem, 2.4vw, 1.2rem); color: var(--ink); }
+.member__seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--paper); flex-shrink: 0; }
+.member__seg button { font-family: var(--sans); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.45rem 0.85rem; border: none; background: transparent; color: var(--taupe); cursor: pointer; transition: background 0.25s var(--ease), color 0.25s var(--ease); }
+.member__seg button.is-on[data-att="yes"] { background: var(--green); color: var(--bone); }
+.member__seg button.is-on[data-att="no"] { background: #9a5a3a; color: var(--bone); }
+
 /* form bits shared */
 .autocomplete { position: relative; }
 input[type="text"], input[type="number"] {
