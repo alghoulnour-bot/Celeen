@@ -90,21 +90,27 @@
     const tl = gsap.timeline({
       defaults: { ease: 'none' },
       scrollTrigger: {
-        trigger: '#hero', start: 'top top', end: '+=2200',
+        trigger: '#hero', start: 'top top', end: '+=2600',
         pin: '#hero-pin', scrub: 1, invalidateOnRefresh: true,
-        onUpdate: (self) => { flap.style.zIndex = self.progress > 0.32 ? '1' : '6'; },
+        // Flap sits above the card until it has tilted past vertical, then
+        // drops behind so the card is revealed sitting inside the open envelope.
+        onUpdate: (self) => { flap.style.zIndex = self.progress > 0.36 ? '1' : '6'; },
       },
     });
 
-    tl.to('#hero-hint', { autoAlpha: 0, y: 14, duration: 0.3 }, 0)
-      // Flap swings fully open — smooth, continuous, no mid-flip fade.
-      .to(flap, { rotationX: -180, duration: 1.1, ease: 'power1.inOut' }, 0.15)
-      .to(seal, { autoAlpha: 0, scale: 0.6, duration: 0.5, ease: 'power1.in' }, 0.2)
-      // Card lifts out and settles high; photo rises to sit right beneath it.
-      .to(letter, { xPercent: -50, y: () => -vh() * 0.13, scale: 1.1, duration: 0.9, ease: 'power2.out' }, 1.25)
-      .to(photo, { y: () => vh() * 0.4, opacity: 1, duration: 1.0, ease: 'power2.out' }, 1.5)
-      // Envelope quietly dissolves only after the flap has fully opened.
-      .to('.envelope__back, .envelope__front, .envelope__flap', { autoAlpha: 0, duration: 0.55 }, 1.55);
+    tl.to('#hero-hint', { autoAlpha: 0, y: 14, duration: 0.35 }, 0)
+      // 1) The flap lifts open — slow and dominant, the whole first act. It
+      //    peels up toward you and settles back, uncovering the card inside.
+      .to(flap, { rotationX: -172, duration: 1.5, ease: 'power2.inOut' }, 0.2)
+      .to(seal, { autoAlpha: 0, scale: 0.55, duration: 0.6, ease: 'power1.in' }, 0.25)
+      // 2) With the flap open and the card revealed, it slides up and out.
+      .to(letter, { xPercent: -50, y: () => -vh() * 0.13, scale: 1.1, duration: 0.9, ease: 'power2.out' }, 1.75)
+      // 3) Photo rises to sit right beneath the card.
+      .to(photo, { y: () => vh() * 0.4, opacity: 1, duration: 1.0, ease: 'power2.out' }, 2.0)
+      // 4) The whole envelope shell dissolves together, gently, once the card
+      //    is clear — no single-frame pop.
+      .to(['.envelope__back', '.envelope__front', '.envelope__flap', '#envelope-seal'],
+          { autoAlpha: 0, duration: 0.9, ease: 'power1.inOut' }, 2.1);
   }
 
   /* ---------------------------------------------------------- Blur-in ------ */

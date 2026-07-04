@@ -4,10 +4,16 @@ const responseStore = require('../responseStore');
 
 const router = express.Router();
 
-const ADMIN_KEY = process.env.ADMIN_KEY || 'omarceleen';
+// No default — the dashboard is disabled entirely unless a key is configured,
+// so no admin credential ever ships in source.
+const ADMIN_KEY = process.env.ADMIN_KEY || '';
 
-// Constant-time key check (accepts ?key= or an Authorization: Bearer header).
+// Constant-time key check. Prefers an Authorization: Bearer header (query keys
+// leak into logs/history) but still accepts ?key= for convenience.
 function guard(req, res, next) {
+  if (!ADMIN_KEY) {
+    return res.status(503).send('Admin dashboard disabled — set ADMIN_KEY in the environment.');
+  }
   const auth = req.headers.authorization || '';
   const provided = auth.startsWith('Bearer ') ? auth.slice(7) : (req.query.key || '');
   const a = Buffer.from(String(provided));

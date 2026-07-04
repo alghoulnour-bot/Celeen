@@ -172,7 +172,7 @@ img { max-width: 100%; display: block; }
 }
 .envelope__flap::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(158deg, #D8C8A2, #CBBA92);
+  background: linear-gradient(158deg, #C6B488, #B3A176);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform: rotateX(180deg); backface-visibility: hidden;
 }

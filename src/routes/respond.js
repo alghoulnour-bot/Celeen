@@ -4,6 +4,26 @@ const responseStore = require('../responseStore');
 
 const router = express.Router();
 
+// Lightweight in-memory rate limit (per IP) to blunt mass/scripted tampering.
+// This is an open, name-based wedding RSVP by design — no per-guest login — so
+// this is the proportionate control rather than authenticating every guest.
+const HITS = new Map();
+const WINDOW_MS = 60 * 1000;
+const MAX_HITS = 30;
+function rateLimit(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  const rec = HITS.get(ip) || { count: 0, reset: now + WINDOW_MS };
+  if (now > rec.reset) { rec.count = 0; rec.reset = now + WINDOW_MS; }
+  rec.count += 1;
+  HITS.set(ip, rec);
+  if (rec.count > MAX_HITS) {
+    return res.status(429).json({ error: 'Too many requests — please try again shortly.' });
+  }
+  next();
+}
+router.use(rateLimit);
+
 // Step: attendance. Looks the guest up so table/party come from the server,
 // not the client, and records whether they're coming.
 router.post('/attend', (req, res) => {
@@ -11,12 +31,15 @@ router.post('/attend', (req, res) => {
   if (!name || !name.trim()) {
     return res.status(400).json({ error: 'Name is required' });
   }
+  if (typeof attending !== 'boolean') {
+    return res.status(400).json({ error: 'attending must be true or false' });
+  }
   const guest = findGuestByName(name);
   if (!guest) {
     return res.status(404).json({ error: 'Name not found on the guest list' });
   }
   responseStore.upsert(guest.name, {
-    attending: attending !== false,
+    attending,
     table: guest.table,
     partySize: guest.partySize,
   });
