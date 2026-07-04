@@ -20,6 +20,9 @@
   --line:      rgba(44, 39, 28, 0.16);
   --line-soft: rgba(44, 39, 28, 0.09);
 
+  /* Fibrous paper texture, layered onto paper surfaces via background-blend */
+  --paper-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.55'/%3E%3C/svg%3E");
+
   --serif:  'Cormorant Garamond', Georgia, serif;
   --script: 'Pinyon Script', 'Cormorant Garamond', cursive;
   --sans:   'Jost', 'Helvetica Neue', Arial, sans-serif;
@@ -45,14 +48,16 @@ img { max-width: 100%; display: block; }
 /* ---- Overlays -------------------------------------------------------------- */
 .grain {
   position: fixed; inset: 0; z-index: 60; pointer-events: none;
-  opacity: 0.04; mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.09; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+/* Warm vignette + faint corner light — filmic, aged-print depth */
 .ambient {
-  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  position: fixed; inset: 0; z-index: 58; pointer-events: none;
   background:
-    radial-gradient(60% 45% at 15% 10%, rgba(173,149,96,0.10), transparent 70%),
-    radial-gradient(55% 45% at 88% 90%, rgba(60,74,52,0.08), transparent 70%);
+    radial-gradient(58% 42% at 15% 8%, rgba(173,149,96,0.08), transparent 70%),
+    radial-gradient(52% 42% at 88% 92%, rgba(60,74,52,0.06), transparent 70%),
+    radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(44,39,28,0.10) 100%);
 }
 .scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 55; pointer-events: none; }
 .scroll-progress span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, transparent, var(--gold)); }
@@ -116,7 +121,8 @@ img { max-width: 100%; display: block; }
 .paper-panel { position: relative; isolation: isolate; background: transparent; padding: clamp(2rem, 4vw, 3rem); border-radius: 4px; }
 .paper-panel::before {
   content: ""; position: absolute; inset: 0; z-index: -2;
-  background: linear-gradient(168deg, var(--paper), #F5EEDD); border-radius: 4px;
+  background: var(--paper-tex), linear-gradient(168deg, var(--paper), #F2EBD8);
+  background-blend-mode: soft-light; background-size: 150px, cover; border-radius: 4px;
   filter: url(#deckle) drop-shadow(0 26px 44px rgba(44, 39, 28, 0.22));
 }
 .paper-panel::after {
@@ -142,9 +148,10 @@ img { max-width: 100%; display: block; }
   position: relative; width: min(92vw, 660px); height: min(58vw, 436px);
   transform-style: preserve-3d;
 }
-.letter { position: absolute; left: 50%; top: 12%; width: 82%; transform: translateX(-50%); z-index: 2; will-change: transform; }
+.letter { position: absolute; left: 50%; top: 15%; width: 82%; transform: translateX(-50%); z-index: 2; will-change: transform; }
 .letter__inner {
-  background: linear-gradient(180deg, var(--paper), #F6EFDE);
+  background: var(--paper-tex), linear-gradient(180deg, var(--paper), #F3ECDA);
+  background-blend-mode: soft-light; background-size: 150px, cover;
   border: 1px solid var(--line-soft); border-radius: 3px;
   box-shadow: 0 16px 34px -20px rgba(44,39,28,0.45);
   padding: clamp(1.5rem, 4vw, 2.4rem) 1.4rem; text-align: center;
@@ -153,12 +160,22 @@ img { max-width: 100%; display: block; }
 .letter__names { font-family: var(--script); font-weight: 400; font-size: clamp(2.4rem, 8vw, 3.9rem); line-height: 1; color: var(--ink); }
 .letter__date { display: block; font-family: var(--sans); font-weight: 300; font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-soft); margin-top: 0.9rem; }
 
-.envelope__back { position: absolute; inset: 0; z-index: 1; background: linear-gradient(160deg, #E5D8BC, #D9C9A6); border-radius: 6px; box-shadow: 0 36px 70px -34px rgba(44,39,28,0.5); }
+/* Back panel doubles as the inner lining — lighter, with a soft top inner
+   shadow so that once the flap opens you're clearly looking *inside*. */
+.envelope__back {
+  position: absolute; inset: 0; z-index: 1;
+  background: var(--paper-tex), linear-gradient(180deg, #EEE6D2, #E1D7BD);
+  background-blend-mode: soft-light; background-size: 150px, cover;
+  border-radius: 6px;
+  box-shadow: 0 36px 70px -34px rgba(44,39,28,0.5), inset 0 28px 36px -22px rgba(44,39,28,0.34);
+}
 .envelope__front {
   position: absolute; inset: 0; z-index: 3;
-  background: linear-gradient(158deg, #EEE2C6, #E2D3B0); border-radius: 6px;
+  background: var(--paper-tex), linear-gradient(158deg, #E5D9BD, #D4C59F);
+  background-blend-mode: soft-light; background-size: 150px, cover;
+  border-radius: 6px;
   clip-path: polygon(0 0, 50% 66%, 100% 0, 100% 100%, 0 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
 }
 .envelope__front::after {
   content: ""; position: absolute; inset: 0;
@@ -168,23 +185,28 @@ img { max-width: 100%; display: block; }
 }
 .envelope__flap {
   position: absolute; top: 0; left: 0; width: 100%; height: 66%; z-index: 6;
-  background: linear-gradient(158deg, #ECE0C3, #DFD0AC);
+  background: var(--paper-tex), linear-gradient(158deg, #E3D7BB, #D1C19C);
+  background-blend-mode: soft-light; background-size: 150px, cover;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform-origin: 50% 0%; transform: rotateX(0deg);
   backface-visibility: hidden; box-shadow: 0 6px 14px -6px rgba(44,39,28,0.4);
   will-change: transform;
 }
+/* Inner side of the flap = the lining, revealed as it opens */
 .envelope__flap::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(158deg, #C6B488, #B3A176);
+  background: var(--paper-tex), linear-gradient(158deg, #EDE4D0, #DFD5BB);
+  background-blend-mode: soft-light; background-size: 150px, cover;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform: rotateX(180deg); backface-visibility: hidden;
+  box-shadow: inset 0 6px 14px -8px rgba(44,39,28,0.3);
 }
 .envelope__seal {
   position: absolute; top: calc(66% - 34px); left: 50%; transform: translateX(-50%);
   width: 68px; height: 68px; z-index: 7; border-radius: 50%;
-  background: radial-gradient(circle at 38% 32%, #4C5B41, var(--green-deep) 72%, #1F2A1B);
-  box-shadow: 0 5px 14px -4px rgba(44,39,28,0.55), inset 0 1px 2px rgba(255,255,255,0.18);
+  background: var(--paper-tex), radial-gradient(circle at 38% 32%, #4C5B41, var(--green-deep) 72%, #1F2A1B);
+  background-blend-mode: soft-light; background-size: 70px, cover;
+  box-shadow: 0 5px 14px -4px rgba(44,39,28,0.55), inset 0 1px 2px rgba(255,255,255,0.14), inset 0 0 18px -4px rgba(0,0,0,0.4);
   display: flex; align-items: center; justify-content: center;
 }
 
