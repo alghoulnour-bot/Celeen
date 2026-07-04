@@ -89,7 +89,7 @@
       gsap.set(flap, { autoAlpha: 0 });
       gsap.set(seal, { autoAlpha: 0 });
       gsap.set('.envelope__back, .envelope__front', { autoAlpha: 0 });
-      gsap.set(letter, { xPercent: -50, y: -vh() * 0.16, scale: 1.0 });
+      gsap.set(letter, { xPercent: -50, y: -vh() * 0.2, scale: 1.02, rotationX: -16 });
       gsap.set(photo, { y: vh() * 0.44, opacity: 1 });
       return;
     }
@@ -108,12 +108,14 @@
     tl.to('#hero-hint', { autoAlpha: 0, y: 14, duration: 0.3, ease: 'power1.out' }, 0)
       // Gentle push-in (much subtler now).
       .to(scene, { scale: 1.08, duration: 2.0, ease: 'power1.inOut' }, 0.1)
-      // THE opening — linear with scroll so every step visibly rotates the
-      // flap open, revealing the green liner. No easing = even, frame-by-frame.
-      .to(flap, { rotationX: -140, duration: 1.7, ease: 'none' }, 0.15)
+      // THE opening — a full 180deg flip about the top edge so the flap swings
+      // all the way up and stands as a triangle ABOVE the envelope (apex up),
+      // linear with scroll so every step visibly moves it.
+      .to(flap, { rotationX: -180, duration: 1.7, ease: 'none' }, 0.15)
       .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.5, ease: 'power1.in' }, 0.15)
-      // Card drawn up and out over the top of the open flap.
-      .to(letter, { xPercent: -50, y: () => -vh() * 0.16, scale: 1.0, duration: 1.0, ease: 'power2.out' }, 2.05)
+      // Card drawn up and out — flattening (counter the 16deg tilt) so it faces
+      // you, sliding over the top of the standing flap.
+      .to(letter, { xPercent: -50, y: () => -vh() * 0.2, scale: 1.02, rotationX: -16, duration: 1.0, ease: 'power2.out' }, 2.05)
       .to(photo, { y: () => vh() * 0.44, opacity: 1, duration: 1.0, ease: 'power2.out' }, 2.35)
       // Envelope dissolves gently once the card is clear.
       .to(['.envelope__back', '.envelope__front', '.envelope__flap', '#envelope-seal'],
