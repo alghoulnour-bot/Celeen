@@ -106,8 +106,9 @@
     tl.to('#hero-hint', { autoAlpha: 0, y: 14, duration: 0.35 }, 0)
       // 1) Zoom in — the camera pushes toward the envelope, "entering" it.
       .to(scene, { scale: 1.2, duration: 1.8, ease: 'power1.inOut' }, 0.1)
-      // 2) The flap lifts all the way open, revealing the lighter lining inside.
-      .to(flap, { rotationX: -178, duration: 1.3, ease: 'power2.inOut' }, 0.2)
+      // 2) The flap lifts open and stands open (green liner facing out), not
+      //    folded flat/invisible.
+      .to(flap, { rotationX: -142, duration: 1.3, ease: 'power2.inOut' }, 0.2)
       .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.55, ease: 'power1.in' }, 0.25)
       // 3) Hold — the envelope sits fully open (lining + card visible inside)
       //    while the zoom finishes, before the card is drawn out.

@@ -48,16 +48,21 @@ img { max-width: 100%; display: block; }
 /* ---- Overlays -------------------------------------------------------------- */
 .grain {
   position: fixed; inset: 0; z-index: 60; pointer-events: none;
-  opacity: 0.09; mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.16; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-/* Warm vignette + faint corner light — filmic, aged-print depth */
+/* Warm aged wash + heavy vignette — filmic, old-print depth */
 .ambient {
   position: fixed; inset: 0; z-index: 58; pointer-events: none;
   background:
-    radial-gradient(58% 42% at 15% 8%, rgba(173,149,96,0.08), transparent 70%),
-    radial-gradient(52% 42% at 88% 92%, rgba(60,74,52,0.06), transparent 70%),
-    radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(44,39,28,0.10) 100%);
+    radial-gradient(60% 45% at 15% 8%, rgba(173,149,96,0.10), transparent 70%),
+    radial-gradient(130% 110% at 50% 42%, transparent 46%, rgba(46,34,18,0.22) 100%);
+}
+/* Warm sepia grade over the whole page */
+.ambient::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(160deg, rgba(120,92,44,0.10), rgba(74,60,34,0.12));
+  mix-blend-mode: multiply;
 }
 .scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 55; pointer-events: none; }
 .scroll-progress span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, transparent, var(--gold)); }
@@ -164,10 +169,10 @@ img { max-width: 100%; display: block; }
    shadow so that once the flap opens you're clearly looking *inside*. */
 .envelope__back {
   position: absolute; inset: 0; z-index: 1;
-  background: var(--paper-tex), linear-gradient(180deg, #EEE6D2, #E1D7BD);
+  background: var(--paper-tex), linear-gradient(180deg, #43523A, #2A3325);
   background-blend-mode: soft-light; background-size: 150px, cover;
   border-radius: 6px;
-  box-shadow: 0 36px 70px -34px rgba(44,39,28,0.5), inset 0 28px 36px -22px rgba(44,39,28,0.34);
+  box-shadow: 0 36px 70px -34px rgba(44,39,28,0.5), inset 0 30px 40px -20px rgba(0,0,0,0.45);
 }
 .envelope__front {
   position: absolute; inset: 0; z-index: 3;
@@ -192,14 +197,14 @@ img { max-width: 100%; display: block; }
   backface-visibility: hidden; box-shadow: 0 6px 14px -6px rgba(44,39,28,0.4);
   will-change: transform;
 }
-/* Inner side of the flap = the lining, revealed as it opens */
+/* Inner side of the flap = a deep green liner (old-money luxury), so the flap
+   reads clearly against the cream page when it stands open. */
 .envelope__flap::after {
   content: ""; position: absolute; inset: 0;
-  background: var(--paper-tex), linear-gradient(158deg, #EDE4D0, #DFD5BB);
+  background: var(--paper-tex), linear-gradient(158deg, #45543B, #2A3325);
   background-blend-mode: soft-light; background-size: 150px, cover;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform: rotateX(180deg); backface-visibility: hidden;
-  box-shadow: inset 0 6px 14px -8px rgba(44,39,28,0.3);
 }
 .envelope__seal {
   position: absolute; top: calc(66% - 34px); left: 50%; transform: translateX(-50%);
@@ -210,14 +215,35 @@ img { max-width: 100%; display: block; }
   display: flex; align-items: center; justify-content: center;
 }
 
+/* ---- Old-money gallery frame + vintage/polaroid photo treatment --------- */
+.frame {
+  position: relative;
+  padding: clamp(10px, 1.3vw, 16px); /* linen mat */
+  background: var(--paper-tex), linear-gradient(160deg, #F1EAD7, #E4D9C0);
+  background-blend-mode: soft-light; background-size: 120px, cover;
+  border: clamp(8px, 1vw, 13px) solid transparent;
+  border-image: linear-gradient(135deg, #B89C5E 0%, #7E6A3E 24%, #E7D3A2 50%, #7E6A3E 76%, #B89C5E 100%) 1;
+  box-shadow: 0 40px 70px -34px rgba(44,39,28,0.6), 0 5px 12px -5px rgba(44,39,28,0.45);
+}
+.frame::before { /* inner gold fillet line around the image */
+  content: ""; position: absolute; inset: clamp(10px, 1.3vw, 16px);
+  border: 1.5px solid rgba(126,106,62,0.65); pointer-events: none; z-index: 3;
+}
+.frame::after { /* vignette + warm film wash over the image */
+  content: ""; position: absolute; inset: clamp(10px, 1.3vw, 16px); z-index: 2; pointer-events: none;
+  background:
+    radial-gradient(125% 100% at 50% 38%, transparent 52%, rgba(38,28,14,0.34) 100%),
+    linear-gradient(rgba(120,88,44,0.12), rgba(70,58,32,0.14));
+  mix-blend-mode: multiply;
+}
+.frame img { filter: sepia(0.3) saturate(0.8) contrast(0.9) brightness(1.06); }
+
 .hero-photo {
   position: absolute; left: 50%; top: 0;
-  width: min(64vw, 300px); z-index: 4; opacity: 0;
-  border-radius: 340px 340px 5px 5px; overflow: hidden;
-  border: 1px solid var(--line); box-shadow: 0 34px 60px -36px rgba(44,39,28,0.55);
-  background: var(--sand); will-change: transform, opacity;
+  width: min(66vw, 300px); z-index: 4; opacity: 0;
+  will-change: transform, opacity;
 }
-.hero-photo img { aspect-ratio: 5 / 6.1; object-fit: cover; width: 100%; filter: saturate(0.96); }
+.hero-photo img { display: block; width: 100%; aspect-ratio: 5 / 6.1; object-fit: cover; }
 
 .hero__hint {
   position: absolute; bottom: clamp(1.6rem, 5vh, 3rem); left: 50%; transform: translateX(-50%);
@@ -240,13 +266,12 @@ img { max-width: 100%; display: block; }
 /* ============================ MOMENT (photo 2) ==================================== */
 .moment { padding-left: 0; padding-right: 0; text-align: center; }
 .photo-wipe {
-  width: min(90vw, 720px); margin: 0 auto; aspect-ratio: 7 / 5; overflow: hidden;
-  border-radius: 6px; border: 1px solid var(--line);
-  box-shadow: 0 40px 70px -44px rgba(44,39,28,0.5);
-  clip-path: inset(0 0 100% 0);
+  width: min(84vw, 640px); margin: 0 auto;
+  clip-path: inset(0 0 100% 0); /* wipe reveal */
 }
-.photo-wipe img { width: 100%; height: 118%; object-fit: cover; filter: saturate(0.95); will-change: transform; }
-.moment__cap { font-family: var(--ar); font-size: clamp(1.6rem, 4vw, 2.4rem); color: var(--green-soft); margin-top: 1.8rem; }
+.photo-inner { position: relative; overflow: hidden; aspect-ratio: 7 / 5; }
+.photo-wipe img { width: 100%; height: 118%; object-fit: cover; will-change: transform; }
+.moment__cap { font-family: var(--ar); font-size: clamp(1.6rem, 4vw, 2.4rem); color: var(--green-soft); margin-top: 2.2rem; }
 
 /* ============================ DETAILS ==================================== */
 .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1.2rem, 2.4vw, 2rem); margin-top: 3.4rem; }
