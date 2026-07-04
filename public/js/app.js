@@ -95,26 +95,24 @@
 
     const tl = gsap.timeline({
       scrollTrigger: {
-        trigger: '#hero', start: 'top top', end: '+=3000',
+        trigger: '#hero', start: 'top top', end: '+=1700',
         pin: '#hero-pin', scrub: 0.3, invalidateOnRefresh: true,
-        // Flap stays IN FRONT of the card while lifting (hiding it and
-        // physically uncovering it as it rotates); once past vertical it drops
-        // BEHIND so the card slides out on top of the standing flap.
-        onUpdate: (self) => { flap.style.zIndex = self.progress > 0.44 ? '1' : '6'; },
+        // Flap covers the card while lifting; once past vertical it drops
+        // behind so the card slides out on top.
+        onUpdate: (self) => { flap.style.zIndex = self.progress > 0.32 ? '1' : '6'; },
       },
     });
 
-    tl.to('#hero-hint', { autoAlpha: 0, y: 14, duration: 0.3, ease: 'power1.out' }, 0)
-      // THE opening — a full 180deg flip about the top edge so the flap swings
-      // all the way open, revealing the green liner. Linear with scroll.
-      .to(flap, { rotationX: -180, duration: 1.7, ease: 'none' }, 0.15)
-      .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.5, ease: 'power1.in' }, 0.15)
-      // Card drawn up and out of the open envelope.
-      .to(letter, { xPercent: -50, y: () => -vh() * 0.18, scale: 1.02, duration: 1.0, ease: 'power2.out' }, 2.05)
-      .to(photo, { y: () => vh() * 0.44, opacity: 1, duration: 1.0, ease: 'power2.out' }, 2.35)
-      // Envelope dissolves gently once the card is clear.
+    tl.to('#hero-hint', { autoAlpha: 0, y: 14, duration: 0.25, ease: 'power1.out' }, 0)
+      // Flap flips fully open (green liner), linear with scroll — snappy.
+      .to(flap, { rotationX: -180, duration: 0.85, ease: 'none' }, 0.05)
+      .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.4, ease: 'power1.in' }, 0.05)
+      // Card comes out right after; the envelope dissolves quickly and the
+      // photo rises up beneath — all overlapping so it doesn't drag.
+      .to(letter, { xPercent: -50, y: () => -vh() * 0.18, scale: 1.02, duration: 0.6, ease: 'power2.out' }, 0.85)
       .to(['.envelope__back', '.envelope__front', '.envelope__flap', '#envelope-seal'],
-          { autoAlpha: 0, duration: 0.95, ease: 'power1.inOut' }, 2.5);
+          { autoAlpha: 0, duration: 0.4, ease: 'power1.inOut' }, 0.9)
+      .to(photo, { y: () => vh() * 0.44, opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.95);
   }
 
   /* ---------------------------------------------------------- Blur-in ------ */
