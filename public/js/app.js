@@ -36,6 +36,29 @@
     '</svg>';
   document.querySelectorAll('[data-crest]').forEach((el) => { el.innerHTML = CREST_SVG; });
 
+  /* ------------------------------------------------ Botanical corner vine -- */
+  const VINE_SVG =
+    '<svg class="vine__svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<path class="vine__stem" d="M12 12 C 54 32, 96 70, 122 116 C 136 140, 148 164, 154 190"/>' +
+    '<path class="vine__stem" d="M40 22 C 60 40, 66 64, 60 92"/>' +
+    '<path class="vine__stem" d="M22 40 C 40 60, 64 66, 92 60"/>' +
+    '<g class="vine__leaves">' +
+    '<ellipse cx="46" cy="34" rx="13" ry="4.6" transform="rotate(36 46 34)"/>' +
+    '<ellipse cx="58" cy="27" rx="10" ry="3.8" transform="rotate(-6 58 27)"/>' +
+    '<ellipse cx="80" cy="62" rx="13" ry="4.6" transform="rotate(46 80 62)"/>' +
+    '<ellipse cx="93" cy="55" rx="10" ry="3.8" transform="rotate(4 93 55)"/>' +
+    '<ellipse cx="107" cy="94" rx="12" ry="4.4" transform="rotate(54 107 94)"/>' +
+    '<ellipse cx="120" cy="89" rx="9.5" ry="3.6" transform="rotate(16 120 89)"/>' +
+    '<ellipse cx="129" cy="128" rx="11" ry="4.2" transform="rotate(62 129 128)"/>' +
+    '<ellipse cx="142" cy="124" rx="9" ry="3.6" transform="rotate(28 142 124)"/>' +
+    '<ellipse cx="149" cy="164" rx="10" ry="3.8" transform="rotate(70 149 164)"/>' +
+    '<ellipse cx="58" cy="92" rx="8" ry="3.2" transform="rotate(104 58 92)"/>' +
+    '<ellipse cx="92" cy="58" rx="8" ry="3.2" transform="rotate(14 92 58)"/>' +
+    '<circle class="vine__berry" cx="70" cy="46" r="2.6"/>' +
+    '<circle class="vine__berry" cx="46" cy="70" r="2.6"/>' +
+    '</g></svg>';
+  document.querySelectorAll('[data-vine]').forEach((el) => { el.innerHTML = VINE_SVG; });
+
   /* ---------------------------------------------------------- Preloader ---- */
   function runPreloader(done) {
     const pre = document.getElementById('preloader');
@@ -94,7 +117,7 @@
     const vh = () => window.innerHeight;
 
     if (prefersReduced) {
-      gsap.set(flap, { autoAlpha: 0 });
+      gsap.set(flap, { scaleY: -1 });
       gsap.set(seal, { autoAlpha: 0 });
       gsap.set('.envelope__back, .envelope__front', { autoAlpha: 0 });
       gsap.set(letter, { x: 0, xPercent: -50, y: -vh() * 0.26, scale: 1.02 });
@@ -114,14 +137,17 @@
     });
 
     tl.to('#hero-hint', { autoAlpha: 0, y: 14, duration: 0.25, ease: 'power1.out' }, 0)
-      // Flap flips fully open (green liner), linear with scroll — snappy.
-      .to(flap, { rotationX: -180, duration: 0.85, ease: 'none' }, 0.05)
+      // Flap opens UPWARD — flips up above the envelope (apex up) and stays,
+      // like a real open envelope, instead of being erased.
+      .to(flap, { scaleY: -1, duration: 0.85, ease: 'power2.inOut' }, 0.05)
       .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.4, ease: 'power1.in' }, 0.05)
       // Card comes out right after; the envelope dissolves quickly and the
       // photo rises up beneath — all overlapping so it doesn't drag.
       .to(letter, { x: 0, xPercent: -50, y: () => -vh() * 0.26, scale: 1.02, duration: 0.6, ease: 'power2.out' }, 0.85)
-      .to(['.envelope__back', '.envelope__front', '.envelope__flap', '#envelope-seal'],
+      .to(['.envelope__back', '.envelope__front', '#envelope-seal'],
           { autoAlpha: 0, duration: 0.4, ease: 'power1.inOut' }, 0.9)
+      // The open flap lingers a beat (clearly shown open), then tidies away.
+      .to(flap, { autoAlpha: 0, duration: 0.35, ease: 'power1.in' }, 1.15)
       .to(photo, { y: () => vh() * 0.30, opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.95)
       .to(cta, { autoAlpha: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 1.25);
   }
