@@ -39,27 +39,57 @@
   document.querySelectorAll('[data-crest]').forEach((el) => { el.innerHTML = CREST_SVG; });
 
   /* ------------------------------------------------ Botanical corner vine -- */
-  const VINE_SVG =
+  // Sculpted ivory floral corner spray — layered roses, blossoms and leaves
+  // with a soft relief shadow, echoing the plaster-flower reference. Built
+  // from ellipse petals so it stays tone-on-tone and light on the page.
+  function petalRing(cx, cy, count, radius, rx, ry, startDeg, cls) {
+    let s = '';
+    for (let i = 0; i < count; i++) {
+      const a = (startDeg || 0) + (360 / count) * i;
+      const rad = (a * Math.PI) / 180;
+      const px = (cx + Math.cos(rad) * radius).toFixed(1);
+      const py = (cy + Math.sin(rad) * radius).toFixed(1);
+      s += '<ellipse class="' + cls + '" cx="' + px + '" cy="' + py + '" rx="' + rx.toFixed(1) + '" ry="' + ry.toFixed(1) + '" transform="rotate(' + a.toFixed(1) + ' ' + px + ' ' + py + ')"/>';
+    }
+    return s;
+  }
+  function rose(cx, cy, s) {
+    return '<g>' +
+      petalRing(cx, cy, 6, 8.6 * s, 7 * s, 4.2 * s, 0, 'bloom__petal') +
+      petalRing(cx, cy, 5, 4.8 * s, 5 * s, 3.1 * s, 32, 'bloom__petal bloom__petal--in') +
+      '<circle class="bloom__core" cx="' + cx + '" cy="' + cy + '" r="' + (2.8 * s).toFixed(1) + '"/></g>';
+  }
+  function blossom(cx, cy, s) {
+    return '<g>' +
+      petalRing(cx, cy, 5, 5.2 * s, 5.6 * s, 3.6 * s, 12, 'bloom__petal') +
+      '<circle class="bloom__core" cx="' + cx + '" cy="' + cy + '" r="' + (2.2 * s).toFixed(1) + '"/></g>';
+  }
+  function leaf(cx, cy, len, ang) {
+    return '<ellipse class="bloom__leaf" cx="' + cx + '" cy="' + cy + '" rx="' + len + '" ry="' + (len * 0.32).toFixed(1) + '" transform="rotate(' + ang + ' ' + cx + ' ' + cy + ')"/>';
+  }
+  const BLOOM_SVG =
     '<svg class="vine__svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-    '<path class="vine__stem" d="M12 12 C 54 32, 96 70, 122 116 C 136 140, 148 164, 154 190"/>' +
-    '<path class="vine__stem" d="M40 22 C 60 40, 66 64, 60 92"/>' +
-    '<path class="vine__stem" d="M22 40 C 40 60, 64 66, 92 60"/>' +
-    '<g class="vine__leaves">' +
-    '<ellipse cx="46" cy="34" rx="13" ry="4.6" transform="rotate(36 46 34)"/>' +
-    '<ellipse cx="58" cy="27" rx="10" ry="3.8" transform="rotate(-6 58 27)"/>' +
-    '<ellipse cx="80" cy="62" rx="13" ry="4.6" transform="rotate(46 80 62)"/>' +
-    '<ellipse cx="93" cy="55" rx="10" ry="3.8" transform="rotate(4 93 55)"/>' +
-    '<ellipse cx="107" cy="94" rx="12" ry="4.4" transform="rotate(54 107 94)"/>' +
-    '<ellipse cx="120" cy="89" rx="9.5" ry="3.6" transform="rotate(16 120 89)"/>' +
-    '<ellipse cx="129" cy="128" rx="11" ry="4.2" transform="rotate(62 129 128)"/>' +
-    '<ellipse cx="142" cy="124" rx="9" ry="3.6" transform="rotate(28 142 124)"/>' +
-    '<ellipse cx="149" cy="164" rx="10" ry="3.8" transform="rotate(70 149 164)"/>' +
-    '<ellipse cx="58" cy="92" rx="8" ry="3.2" transform="rotate(104 58 92)"/>' +
-    '<ellipse cx="92" cy="58" rx="8" ry="3.2" transform="rotate(14 92 58)"/>' +
-    '<circle class="vine__berry" cx="70" cy="46" r="2.6"/>' +
-    '<circle class="vine__berry" cx="46" cy="70" r="2.6"/>' +
+    '<defs><filter id="bloomRelief" x="-40%" y="-40%" width="180%" height="180%">' +
+    '<feDropShadow dx="0.5" dy="1.5" stdDeviation="1.4" flood-color="#6E5A2E" flood-opacity="0.30"/>' +
+    '</filter></defs>' +
+    '<g filter="url(#bloomRelief)">' +
+    // leaves sit behind the blooms and trail along both edges
+    leaf(58, 18, 17, 20) + leaf(18, 58, 17, 70) + leaf(92, 38, 14, 8) + leaf(38, 92, 14, 82) +
+    leaf(118, 24, 12, 4) + leaf(24, 118, 12, 86) + leaf(146, 30, 10, 2) + leaf(30, 146, 10, 88) +
+    leaf(78, 70, 11, 46) +
+    // roses cluster in the corner, blossoms fan out along the edges
+    rose(32, 32, 1.75) +
+    rose(72, 26, 1.15) +
+    rose(26, 72, 1.15) +
+    blossom(62, 60, 1.15) +
+    blossom(102, 22, 0.95) +
+    blossom(22, 102, 0.95) +
+    blossom(132, 26, 0.78) +
+    blossom(26, 132, 0.78) +
+    blossom(158, 30, 0.62) +
+    blossom(30, 158, 0.62) +
     '</g></svg>';
-  document.querySelectorAll('[data-vine]').forEach((el) => { el.innerHTML = VINE_SVG; });
+  document.querySelectorAll('[data-vine]').forEach((el) => { el.innerHTML = BLOOM_SVG; });
 
   /* ---------------------------------------------------------- Preloader ---- */
   function runPreloader(done) {
@@ -125,7 +155,7 @@
     if (prefersReduced) {
       gsap.set(flap, { scaleY: -1 });
       gsap.set(seal, { autoAlpha: 0 });
-      gsap.set('.envelope__back, .envelope__front', { autoAlpha: 0 });
+      gsap.set('.envelope__back, .envelope__front, .env-bloom', { autoAlpha: 0 });
       gsap.set(letter, { x: 0, xPercent: -50, y: -vh() * 0.26, scale: 1.02 });
       gsap.set(photo, { y: vh() * 0.30, opacity: 1 });
       if (cta) gsap.set(cta, { xPercent: -50, autoAlpha: 1, y: 0 });
@@ -147,6 +177,8 @@
       // like a real open envelope, instead of being erased.
       .to(flap, { scaleY: -1, duration: 0.85, ease: 'power2.inOut' }, 0.05)
       .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.4, ease: 'power1.in' }, 0.05)
+      // Corner blooms clear off the envelope as it begins to open.
+      .to('.env-bloom', { autoAlpha: 0, duration: 0.4, ease: 'power1.in' }, 0.05)
       // Card comes out right after; the envelope dissolves quickly and the
       // photo rises up beneath — all overlapping so it doesn't drag.
       .to(letter, { x: 0, xPercent: -50, y: () => -vh() * 0.26, scale: 1.02, duration: 0.6, ease: 'power2.out' }, 0.85)
