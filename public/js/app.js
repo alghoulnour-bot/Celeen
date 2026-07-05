@@ -109,7 +109,10 @@
       else document.getElementById('attend').scrollIntoView({ behavior: 'smooth' });
     });
 
-    gsap.set(scene, { xPercent: -50, yPercent: -50 });
+    // x:0/y:0 so GSAP's -50% doesn't stack on the CSS translate(-50%) (which
+    // it otherwise reads as pixels), which shoved the envelope off-centre on
+    // mobile.
+    gsap.set(scene, { x: 0, y: 0, xPercent: -50, yPercent: -50 });
     gsap.set(letter, { x: 0, xPercent: -50 });
     gsap.set(photo, { xPercent: -50, y: () => window.innerHeight * 1.05, opacity: 0 });
     if (cta) gsap.set(cta, { xPercent: -50, autoAlpha: 0, y: 12 });
