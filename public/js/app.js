@@ -221,40 +221,40 @@
       if (lenis) lenis.scrollTo('#attend', { offset: -30, duration: 0.6 });
     }
 
-    // Show the guest's seat prominently on both the gift and thank-you cards.
-    function setSeat() {
-      const s = state.table == null ? ''
-        : state.partySize > 1
-          ? `Your seat · Table ${state.table} · Party of ${state.partySize}`
-          : `Your seat · Table ${state.table}`;
+    // Set the seat/table badge on both the gift and thank-you cards.
+    function setSeatBadge(text) {
       ['q-seat', 'q-thanks-seat'].forEach((id) => {
         const el = document.getElementById(id);
-        if (el) { el.textContent = s; el.hidden = !s; }
+        if (el) { el.textContent = text || ''; el.hidden = !text; }
       });
     }
-    function hideSeat() {
-      ['q-seat', 'q-thanks-seat'].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) { el.textContent = ''; el.hidden = true; }
-      });
+    function setThanks(title, sub) {
+      document.getElementById('q-thanks-title').textContent = title;
+      document.getElementById('q-thanks-sub').textContent = sub;
     }
 
-    // Enter the nqoot step — offered whether or not they're attending, so a
-    // guest who can't come can still give. Sets the right seat/notes + the
-    // default thank-you copy (overridden later if they actually gift).
+    // Enter the nqoot step. The table is shown whenever ANYONE in the party is
+    // coming — so if the person filling this out can't make it but their family
+    // can, the family still sees where they're seated.
     function enterGift(attending) {
       state.attending = attending;
       const note = document.getElementById('q-gift-note');
+      const anyAttending = state.members.length ? state.members.some((m) => m.attending) : attending;
+
       if (attending) {
-        setSeat();
+        setSeatBadge(state.partySize > 1
+          ? `Your seat · Table ${state.table} · Party of ${state.partySize}`
+          : `Your seat · Table ${state.table}`);
         if (note) note.hidden = true;
-        document.getElementById('q-thanks-title').textContent = 'Thank you';
-        document.getElementById('q-thanks-sub').textContent = "We can't wait to celebrate with you.";
+        setThanks('Thank you', "We can't wait to celebrate with you.");
+      } else if (anyAttending) {
+        setSeatBadge(`Your family is seated at Table ${state.table}`);
+        if (note) { note.textContent = "You'll be missed — but your family's table is saved."; note.hidden = false; }
+        setThanks('Thank you', "We'll miss you — but we're glad your family will be there.");
       } else {
-        hideSeat();
+        setSeatBadge('');
         if (note) { note.textContent = "We'll miss you — but you can still send nqoot if you'd like."; note.hidden = false; }
-        document.getElementById('q-thanks-title').textContent = 'We’ll miss you';
-        document.getElementById('q-thanks-sub').textContent = 'Thank you for letting us know.';
+        setThanks('We’ll miss you', 'Thank you for letting us know.');
       }
       goto('gift');
     }
