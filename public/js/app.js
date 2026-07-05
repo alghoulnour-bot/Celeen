@@ -10,6 +10,19 @@
   const hasGSAP = typeof gsap !== 'undefined';
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+  // Gentle ease-in-out for programmatic scrolls: eases in slowly (no sudden
+  // "flash" dart) and settles softly at the end.
+  const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  // Smoothly scroll to a section. Distance-aware duration so a long jump (past
+  // the pinned hero) travels at a calm, readable speed instead of racing.
+  function smoothScrollTo(target, offset) {
+    if (!lenis) { const el = document.querySelector(target); if (el) el.scrollIntoView({ behavior: 'smooth' }); return; }
+    const el = document.querySelector(target);
+    const dist = el ? Math.abs(el.getBoundingClientRect().top) : 0;
+    const duration = Math.min(2.6, Math.max(1.2, dist / 1400)); // ~1400px per second, clamped
+    lenis.scrollTo(target, { offset: offset || 0, duration, easing: easeInOutCubic });
+  }
+
   // Always begin at the top (the envelope) on load/refresh — don't let the
   // browser restore a mid-page scroll position.
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -95,9 +108,7 @@
     if (cta) cta.querySelectorAll('a[href^="#"]').forEach((a) => {
       a.addEventListener('click', (e) => {
         e.preventDefault();
-        const target = a.getAttribute('href');
-        if (lenis) lenis.scrollTo(target, { offset: -20, duration: 1.1 });
-        else document.querySelector(target).scrollIntoView({ behavior: 'smooth' });
+        smoothScrollTo(a.getAttribute('href'), -20);
       });
     });
 
@@ -384,8 +395,7 @@
     const toNqoot = document.getElementById('r-to-nqoot');
     if (toNqoot) toNqoot.addEventListener('click', (e) => {
       e.preventDefault();
-      if (lenis) lenis.scrollTo('#nqoot', { offset: -20, duration: 0.9 });
-      else document.getElementById('nqoot').scrollIntoView({ behavior: 'smooth' });
+      smoothScrollTo('#nqoot', -20);
     });
   }
 

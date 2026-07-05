@@ -137,7 +137,7 @@ img { max-width: 100%; display: block; }
   content: ""; position: absolute; inset: 0; z-index: -2;
   background: var(--paper-tex), linear-gradient(168deg, var(--paper), #F2EBD8);
   background-blend-mode: soft-light; background-size: 150px, cover; border-radius: 4px;
-  filter: url(#deckle) drop-shadow(0 26px 44px rgba(44, 39, 28, 0.22));
+  filter: url(#deckle) drop-shadow(0 14px 40px rgba(44, 39, 28, 0.11));
 }
 .paper-panel::after {
   content: ""; position: absolute; inset: 12px; z-index: -1; pointer-events: none;
