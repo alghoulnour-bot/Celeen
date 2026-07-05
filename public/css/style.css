@@ -261,7 +261,7 @@ img { max-width: 100%; display: block; }
   width: min(66vw, 300px); z-index: 4; opacity: 0;
   will-change: transform, opacity;
 }
-.hero-photo img { display: block; width: 100%; aspect-ratio: 5 / 6.1; object-fit: cover; }
+.hero-photo img { display: block; width: 100%; aspect-ratio: 5 / 6.9; object-fit: cover; object-position: center 16%; }
 
 /* Shortcut buttons that appear below the photo once the hero has opened */
 .hero-ctas {
