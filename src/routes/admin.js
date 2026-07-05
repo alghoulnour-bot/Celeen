@@ -54,8 +54,9 @@ function csvCell(value) {
   return '"' + s.replace(/"/g, '""') + '"';
 }
 
-router.get('/', guard, (req, res) => {
-  const rows = responseStore.all().sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+router.get('/', guard, async (req, res, next) => {
+ try {
+  const rows = (await responseStore.all()).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
   const attending = rows.filter((r) => r.attending).length;
   const guestsComing = rows.filter((r) => r.attending).reduce((s, r) => s + (Number(r.partySize) || 1), 0);
   const pledged = rows.reduce((s, r) => s + (Number(r.giftAmount) || 0), 0);
@@ -64,7 +65,7 @@ router.get('/', guard, (req, res) => {
     ? rows.map((r) => `<tr>${COLUMNS.map(([k]) => `<td>${esc(cell(r[k], k))}</td>`).join('')}</tr>`).join('')
     : `<tr><td colspan="${COLUMNS.length}" class="empty">No responses yet.</td></tr>`;
 
-  const parties = guestStore.getParties();
+  const parties = await guestStore.getParties();
   const respondedNames = new Set(rows.map((r) => String(r.name).toLowerCase()));
   const totalGuests = parties.reduce((n, p) => n + p.members.length, 0);
   const partyRows = parties.length
@@ -162,29 +163,36 @@ router.get('/', guard, (req, res) => {
     });
   </script>
 </body></html>`);
+ } catch (err) { next(err); }
 });
 
-router.get('/export', guard, (req, res) => {
-  const rows = responseStore.all();
-  const header = COLUMNS.map(([, label]) => label).join(',');
-  const lines = rows.map((r) => COLUMNS.map(([k]) => csvCell(r[k])).join(','));
-  const csv = [header, ...lines].join('\n');
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename="omar-celeen-responses.csv"');
-  res.send(csv);
+router.get('/export', guard, async (req, res, next) => {
+  try {
+    const rows = await responseStore.all();
+    const header = COLUMNS.map(([, label]) => label).join(',');
+    const lines = rows.map((r) => COLUMNS.map(([k]) => csvCell(r[k])).join(','));
+    const csv = [header, ...lines].join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="omar-celeen-responses.csv"');
+    res.send(csv);
+  } catch (err) { next(err); }
 });
 
-// Guest editor — add / remove parties at runtime (persisted to data/parties.json).
-router.post('/party/add', guard, express.json(), (req, res) => {
-  const { table, members } = req.body || {};
-  const result = guestStore.addParty({ table, members });
-  if (result.error) return res.status(400).json({ error: result.error });
-  res.json({ ok: true, party: result.party });
+// Guest editor — add / remove parties at runtime (persisted to Neon).
+router.post('/party/add', guard, express.json(), async (req, res, next) => {
+  try {
+    const { table, members } = req.body || {};
+    const result = await guestStore.addParty({ table, members });
+    if (result.error) return res.status(400).json({ error: result.error });
+    res.json({ ok: true, party: result.party });
+  } catch (err) { next(err); }
 });
 
-router.post('/party/remove', guard, express.json(), (req, res) => {
-  const removed = guestStore.removeParty((req.body || {}).id);
-  res.json({ ok: removed });
+router.post('/party/remove', guard, express.json(), async (req, res, next) => {
+  try {
+    const removed = await guestStore.removeParty((req.body || {}).id);
+    res.json({ ok: removed });
+  } catch (err) { next(err); }
 });
 
 module.exports = router;

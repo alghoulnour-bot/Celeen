@@ -32,7 +32,7 @@ function verify(rawBody, sigHeader) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   if (!verify(req.body, req.headers['stripe-signature'])) {
     return res.status(400).json({ error: 'Invalid signature' });
   }
@@ -42,13 +42,17 @@ router.post('/', (req, res) => {
   } catch (err) {
     return res.status(400).json({ error: 'Invalid payload' });
   }
-  if (event.type === 'checkout.session.completed') {
-    const session = (event.data && event.data.object) || {};
-    const name = session.client_reference_id;
-    const actual = Number(session.amount_total) / 100;
-    if (name && Number.isFinite(actual)) {
-      responseStore.recordActualPayment(name, actual);
+  try {
+    if (event.type === 'checkout.session.completed') {
+      const session = (event.data && event.data.object) || {};
+      const name = session.client_reference_id;
+      const actual = Number(session.amount_total) / 100;
+      if (name && Number.isFinite(actual)) {
+        await responseStore.recordActualPayment(name, actual);
+      }
     }
+  } catch (err) {
+    return res.status(500).json({ error: 'Webhook processing error' });
   }
   res.json({ received: true });
 });

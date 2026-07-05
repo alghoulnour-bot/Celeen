@@ -3,8 +3,10 @@ const { getGuestNames } = require('../guestStore');
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  res.json(getGuestNames());
+router.get('/', async (req, res, next) => {
+  try {
+    res.json(await getGuestNames());
+  } catch (err) { next(err); }
 });
 
 module.exports = router;

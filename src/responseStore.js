@@ -1,42 +1,33 @@
+const { sql } = require('./db');
 const { findGuestByName } = require('./guestStore');
-const { readJson, writeJson } = require('./store');
-
-const FILE = 'responses.json';
 
 function keyOf(name) {
-  return name.trim().toLowerCase();
+  return String(name || '').trim().toLowerCase();
 }
 
-// Upsert a guest's response, merging new fields into any existing record.
-// Keyed by lowercased name so the attendance step and the gift step land on
-// the same row.
-function upsert(name, patch) {
-  const responses = readJson(FILE, {});
-  const k = keyOf(name);
-  const existing = responses[k] || { name: name.trim(), createdAt: new Date().toISOString() };
-  responses[k] = {
-    ...existing,
-    ...patch,
-    name: name.trim(),
-    updatedAt: new Date().toISOString(),
-  };
-  writeJson(FILE, responses);
-  return responses[k];
+async function get(name) {
+  const rows = await sql`SELECT record FROM responses WHERE name_key = ${keyOf(name)}`;
+  return rows[0] ? rows[0].record : null;
 }
 
-function all() {
-  return Object.values(readJson(FILE, {}));
+async function all() {
+  const rows = await sql`SELECT record FROM responses`;
+  return rows.map((r) => r.record);
 }
 
-function get(name) {
-  if (!name) return null;
-  return readJson(FILE, {})[keyOf(name)] || null;
+// Upsert a person's response, merging new fields into any existing record.
+async function upsert(name, patch) {
+  const existing = (await get(name)) || { name: String(name).trim(), createdAt: new Date().toISOString() };
+  const record = { ...existing, ...patch, name: String(name).trim(), updatedAt: new Date().toISOString() };
+  await sql`INSERT INTO responses (name_key, record)
+            VALUES (${keyOf(name)}, ${JSON.stringify(record)}::jsonb)
+            ON CONFLICT (name_key) DO UPDATE SET record = EXCLUDED.record`;
+  return record;
 }
 
-// Record a (self-reported) gift, ACCUMULATING onto any previous amount so a
-// guest who gives more later adds to their total rather than overwriting it.
-function addGift(name, method, amount) {
-  const existing = get(name) || {};
+// Record a (self-reported) gift, ACCUMULATING onto any previous amount.
+async function addGift(name, method, amount) {
+  const existing = (await get(name)) || {};
   const total = (Number(existing.giftAmount) || 0) + (Number(amount) || 0);
   const methods = existing.giftMethod ? existing.giftMethod.split(',').map((s) => s.trim()) : [];
   if (method && !methods.includes(method)) methods.push(method);
@@ -48,17 +39,14 @@ function addGift(name, method, amount) {
   });
 }
 
-// Used by the Stripe webhook to attach the *actual* charged amount to whoever
-// the payment link was tagged with (client_reference_id = name). Only records
-// for a known guest, stores under the canonical name, and never overwrites an
-// amount already captured (so a replayed/duplicate event can't tamper).
-function recordActualPayment(name, actualAmount) {
-  const guest = name && findGuestByName(name);
+// Stripe webhook — attach the actual charged amount to a known guest, once.
+async function recordActualPayment(name, actualAmount) {
+  const guest = name && (await findGuestByName(name));
   if (!guest) {
     console.warn('[webhook] payment for unknown guest reference:', name);
     return null;
   }
-  const existing = readJson(FILE, {})[keyOf(guest.name)];
+  const existing = await get(guest.name);
   if (existing && existing.giftActualAmount != null) {
     console.warn('[webhook] actual amount already recorded for', guest.name, '— ignoring');
     return existing;
@@ -66,4 +54,4 @@ function recordActualPayment(name, actualAmount) {
   return upsert(guest.name, { giftActualAmount: actualAmount, giftPaidAt: new Date().toISOString() });
 }
 
-module.exports = { upsert, all, get, addGift, recordActualPayment, findGuestByName };
+module.exports = { get, all, upsert, addGift, recordActualPayment, findGuestByName };
