@@ -177,6 +177,7 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 16px 34px -20px rgba(44,39,28,0.45);
   padding: clamp(1.5rem, 4vw, 2.4rem) 1.4rem; text-align: center;
 }
+.letter__eyebrow { display: block; font-family: var(--sans); font-weight: 400; font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold-deep); margin-bottom: 0.55rem; }
 .letter__names-ar { display: block; font-family: var(--ar); font-weight: 700; font-size: clamp(1.1rem, 3.4vw, 1.7rem); color: var(--green); margin-bottom: 0.35rem; }
 .letter__names { font-family: var(--script); font-weight: 400; font-size: clamp(2.4rem, 8vw, 3.9rem); line-height: 1; color: var(--ink); }
 .letter__date { display: block; font-family: var(--sans); font-weight: 300; font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-soft); margin-top: 0.9rem; }
@@ -403,6 +404,7 @@ input:focus { outline: none; border-color: var(--gold); background: var(--paper)
 /* ============================ FOOTER ==================================== */
 .footer { text-align: center; padding: clamp(4rem, 10vh, 7rem) 1.5rem; background: var(--bone); border-top: 1px solid var(--line-soft); }
 .footer .crest { margin-bottom: 1rem; }
+.footer__eyebrow { font-family: var(--sans); font-size: 0.66rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold-deep); margin-bottom: 0.7rem; }
 .footer__names { font-family: var(--script); font-size: clamp(2.4rem, 7vw, 3.6rem); color: var(--ink); line-height: 1; margin-bottom: 0.5rem; }
 .footer__date { font-family: var(--sans); font-size: 0.7rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--taupe); }
 /* Discreet admin access */
