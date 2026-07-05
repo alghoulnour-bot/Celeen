@@ -72,13 +72,8 @@ img { max-width: 100%; display: block; }
 .vine--tr { top: 0; right: 0; transform: scaleX(-1); }
 .vine--bl { bottom: 0; left: 0; transform: scaleY(-1); }
 .vine--br { bottom: 0; right: 0; transform: scale(-1, -1); }
-.vine__svg { width: 100%; height: auto; display: block; overflow: visible; }
-/* Sculpted ivory blooms — light, raised relief tone-on-tone with the paper */
-.bloom__petal { fill: #F3ECDA; stroke: #BBA067; stroke-width: 0.5; opacity: 0.95; }
-.bloom__petal--in { fill: #FAF5E9; }
-.bloom__leaf { fill: #E4DABE; stroke: #BBA067; stroke-width: 0.4; opacity: 0.88; }
-.bloom__core { fill: #C7AC6B; opacity: 0.9; }
-@media (max-width: 600px) { .vine { width: 96px; } .vines { opacity: 0.9; } }
+.vine__img { width: 100%; height: auto; display: block; }
+@media (max-width: 600px) { .vine { width: 128px; } .vines { opacity: 0.95; } }
 
 /* Same blooms tucked into the four corners of the envelope itself */
 .env-bloom { position: absolute; width: 30%; line-height: 0; z-index: 8; pointer-events: none; }
