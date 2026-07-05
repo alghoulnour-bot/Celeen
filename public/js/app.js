@@ -16,23 +16,12 @@
   window.scrollTo(0, 0);
   window.addEventListener('beforeunload', () => window.scrollTo(0, 0));
 
-  /* ------------------------------------------------- O&C olive crest ------- */
-  const CREST_SPRIG =
-    '<path d="M62 96 C 42 92, 27 78, 20 58"/>' +
-    '<g class="crest__leaves">' +
-    '<ellipse cx="20" cy="58" rx="6.4" ry="2.5" transform="rotate(-62 20 58)"/>' +
-    '<ellipse cx="26" cy="69" rx="6.4" ry="2.5" transform="rotate(-46 26 69)"/>' +
-    '<ellipse cx="35" cy="79" rx="6.4" ry="2.5" transform="rotate(-31 35 79)"/>' +
-    '<ellipse cx="47" cy="88" rx="6" ry="2.4" transform="rotate(-18 47 88)"/>' +
-    '<ellipse cx="30" cy="60" rx="5.4" ry="2.1" transform="rotate(-98 30 60)"/>' +
-    '<ellipse cx="39" cy="70" rx="5.4" ry="2.1" transform="rotate(-82 39 70)"/>' +
-    '<ellipse cx="50" cy="80" rx="5.4" ry="2.1" transform="rotate(-66 50 80)"/>' +
-    '</g>';
+  /* ---------------------------------------- Interlocking O&C monogram ------ */
+  // Overlapping calligraphic O and C (script), like the reference logo.
   const CREST_SVG =
-    '<svg class="crest__svg" viewBox="0 0 160 132" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-    '<text x="80" y="60" text-anchor="middle" class="crest__txt">O&amp;C</text>' +
-    '<g class="crest__olive">' + CREST_SPRIG + '</g>' +
-    '<g class="crest__olive" transform="translate(160,0) scale(-1,1)">' + CREST_SPRIG + '</g>' +
+    '<svg class="crest__svg" viewBox="0 0 150 118" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<text class="crest__mono crest__mono--o" x="52" y="92" text-anchor="middle">O</text>' +
+    '<text class="crest__mono crest__mono--c" x="82" y="92" text-anchor="middle">C</text>' +
     '</svg>';
   document.querySelectorAll('[data-crest]').forEach((el) => { el.innerHTML = CREST_SVG; });
 
@@ -102,11 +91,14 @@
     const cta = document.getElementById('hero-cta');
     if (!envelope || !letter) return;
 
-    // Jump to the questionnaire when the hero CTA is clicked.
-    if (cta) cta.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (lenis) lenis.scrollTo('#attend', { offset: -20, duration: 1.1 });
-      else document.getElementById('attend').scrollIntoView({ behavior: 'smooth' });
+    // Jump to the matching questionnaire when a hero CTA is clicked.
+    if (cta) cta.querySelectorAll('a[href^="#"]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = a.getAttribute('href');
+        if (lenis) lenis.scrollTo(target, { offset: -20, duration: 1.1 });
+        else document.querySelector(target).scrollIntoView({ behavior: 'smooth' });
+      });
     });
 
     // x:0/y:0 so GSAP's -50% doesn't stack on the CSS translate(-50%) (which
@@ -234,96 +226,103 @@
     const t = setInterval(tick, 1000);
   }
 
-  /* ------------------------------------------ Questionnaire (RSVP + Nqoot) - */
-  function buildQuiz() {
-    const quiz = document.getElementById('quiz');
-    if (!quiz) return;
-
-    const steps = {};
-    quiz.querySelectorAll('.q').forEach((q) => { steps[q.dataset.step] = q; });
-    const state = { name: null, table: null, partySize: null, method: null, amount: null, members: [] };
-
-    function goto(step) {
-      Object.values(steps).forEach((q) => { q.classList.remove('is-active'); q.hidden = true; });
-      steps[step].hidden = false;
-      steps[step].classList.add('is-active');
-      if (lenis) lenis.scrollTo('#attend', { offset: -30, duration: 0.6 });
+  /* ------------------------------------------------ Questionnaire helpers -- */
+  // Guest list is fetched once and shared by both flows' autocompletes.
+  let guestNamesCache = null;
+  function loadGuestNames() {
+    if (!guestNamesCache) {
+      guestNamesCache = fetch('/api/guests').then((r) => r.json())
+        .then((n) => (Array.isArray(n) ? n : [])).catch(() => []);
     }
+    return guestNamesCache;
+  }
 
-    // Set the seat/table badge on both the gift and thank-you cards.
-    function setSeatBadge(text) {
-      ['q-seat', 'q-thanks-seat'].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) { el.textContent = text || ''; el.hidden = !text; }
-      });
-    }
-    function setThanks(title, sub) {
-      document.getElementById('q-thanks-title').textContent = title;
-      document.getElementById('q-thanks-sub').textContent = sub;
-    }
-
-    // Enter the nqoot step. The table is shown whenever ANYONE in the party is
-    // coming — so if the person filling this out can't make it but their family
-    // can, the family still sees where they're seated.
-    function enterGift(attending) {
-      state.attending = attending;
-      const note = document.getElementById('q-gift-note');
-      const anyAttending = state.members.length ? state.members.some((m) => m.attending) : attending;
-
-      if (attending) {
-        setSeatBadge(state.partySize > 1
-          ? `Your seat · Table ${state.table} · Party of ${state.partySize}`
-          : `Your seat · Table ${state.table}`);
-        if (note) note.hidden = true;
-        setThanks('Thank you', "We can't wait to celebrate with you.");
-      } else if (anyAttending) {
-        setSeatBadge(`Your family is seated at Table ${state.table}`);
-        if (note) { note.textContent = "You'll be missed — but your family's table is saved."; note.hidden = false; }
-        setThanks('Thank you', "We'll miss you — but we're glad your family will be there.");
-      } else {
-        setSeatBadge('');
-        if (note) { note.textContent = "We'll miss you — but you can still send nqoot if you'd like."; note.hidden = false; }
-        setThanks('We’ll miss you', 'Thank you for letting us know.');
-      }
-      goto('gift');
-    }
-
-    async function post(path, body) {
-      const res = await fetch('/api/respond/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
-      return data;
-    }
-
-    /* Step 1 — name lookup */
-    const nameInput = document.getElementById('q-name');
-    const suggest = document.getElementById('q-suggestions');
-    const nameNext = document.getElementById('q-name-next');
-    const nameErr = document.getElementById('q-name-err');
-    let guestNames = [];
-    fetch('/api/guests').then((r) => r.json()).then((n) => { guestNames = Array.isArray(n) ? n : []; }).catch(() => {});
-
-    function renderSuggest(matches) {
+  // Wire an autocomplete input to the guest list. onPick(name) fires when a
+  // name is chosen; onClear() fires when the field is edited off a valid pick.
+  function setupAutocomplete(input, suggest, onPick, onClear) {
+    let names = [];
+    loadGuestNames().then((n) => { names = n; });
+    function render(matches) {
       suggest.innerHTML = '';
       if (!matches.length) { suggest.hidden = true; return; }
       matches.slice(0, 8).forEach((name) => {
         const li = document.createElement('li');
         li.textContent = name;
-        li.addEventListener('click', () => { nameInput.value = name; state.name = name; nameNext.disabled = false; suggest.hidden = true; });
+        li.addEventListener('click', () => { input.value = name; suggest.hidden = true; onPick(name); });
         suggest.appendChild(li);
       });
       suggest.hidden = false;
     }
-    nameInput.addEventListener('input', () => {
-      state.name = null; nameNext.disabled = true; nameErr.textContent = '';
-      const q = nameInput.value.trim().toLowerCase();
+    input.addEventListener('input', () => {
+      onClear();
+      const q = input.value.trim().toLowerCase();
       if (!q) { suggest.hidden = true; return; }
-      renderSuggest(guestNames.filter((n) => n.toLowerCase().includes(q)));
+      render(names.filter((n) => n.toLowerCase().includes(q)));
     });
-    document.addEventListener('click', (e) => { if (!suggest.contains(e.target) && e.target !== nameInput) suggest.hidden = true; });
+    document.addEventListener('click', (e) => { if (!suggest.contains(e.target) && e.target !== input) suggest.hidden = true; });
+  }
 
-    // On continue, look up the whole party. If this person already responded,
-    // skip straight to nqoot; otherwise show the "who's coming" checklist.
+  // Step navigation scoped to one panel; scrolls the section into view.
+  function makeStepper(panel, anchor) {
+    const steps = {};
+    panel.querySelectorAll('.q').forEach((q) => { steps[q.dataset.step] = q; });
+    return function goto(step) {
+      Object.values(steps).forEach((q) => { q.classList.remove('is-active'); q.hidden = true; });
+      steps[step].hidden = false;
+      steps[step].classList.add('is-active');
+      if (lenis) lenis.scrollTo(anchor, { offset: -30, duration: 0.6 });
+    };
+  }
+
+  async function postRespond(path, body) {
+    const res = await fetch('/api/respond/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    return data;
+  }
+
+  /* ------------------------------------------------------------ RSVP flow -- */
+  function buildRsvp() {
+    const panel = document.getElementById('rsvp');
+    if (!panel) return;
+    const goto = makeStepper(panel, '#attend');
+    const state = { name: null, table: null, partySize: null, members: [] };
+
+    function setSeatBadge(text) {
+      const el = document.getElementById('r-thanks-seat');
+      if (el) { el.textContent = text || ''; el.hidden = !text; }
+    }
+    function setThanks(title, sub) {
+      document.getElementById('r-thanks-title').textContent = title;
+      document.getElementById('r-thanks-sub').textContent = sub;
+    }
+    // The table is shown whenever ANYONE in the party is coming — so if the
+    // person filling this out can't make it but their family can, they still
+    // see where the family is seated.
+    function enterThanks(attending) {
+      const anyAttending = state.members.length ? state.members.some((m) => m.attending) : attending;
+      if (attending) {
+        setSeatBadge(state.partySize > 1
+          ? `Your seat · Table ${state.table} · Party of ${state.partySize}`
+          : `Your seat · Table ${state.table}`);
+        setThanks('Thank you', "We can't wait to celebrate with you.");
+      } else if (anyAttending) {
+        setSeatBadge(`Your family is seated at Table ${state.table}`);
+        setThanks('Thank you', "We'll miss you — but we're glad your family will be there.");
+      } else {
+        setSeatBadge('');
+        setThanks('We’ll miss you', 'Thank you for letting us know.');
+      }
+      goto('thanks');
+    }
+
+    /* Step 1 — name lookup */
+    const nameNext = document.getElementById('r-name-next');
+    const nameErr = document.getElementById('r-name-err');
+    setupAutocomplete(document.getElementById('r-name'), document.getElementById('r-suggestions'),
+      (name) => { state.name = name; nameNext.disabled = false; },
+      () => { state.name = null; nameNext.disabled = true; nameErr.textContent = ''; });
+
     nameNext.addEventListener('click', async () => {
       if (!state.name) return;
       nameNext.disabled = true; nameErr.textContent = '';
@@ -335,8 +334,8 @@
         state.partySize = data.size;
         state.members = data.members.map((m) => ({ name: m.name, attending: m.responded ? m.attending : true }));
         const me = data.members.find((m) => m.name.toLowerCase() === state.name.toLowerCase());
-        if (me && me.responded) { enterGift(me.attending); return; }
-        document.getElementById('q-party-table').textContent = 'Table ' + data.table;
+        if (me && me.responded) { enterThanks(me.attending); return; }
+        document.getElementById('r-party-table').textContent = 'Table ' + data.table;
         buildMembers();
         goto('party');
       } catch (err) {
@@ -348,7 +347,7 @@
 
     /* Step 2 — who's coming (party checklist) */
     function buildMembers() {
-      const wrap = document.getElementById('q-members');
+      const wrap = document.getElementById('r-members');
       wrap.innerHTML = '';
       state.members.forEach((m) => {
         const row = document.createElement('div');
@@ -367,48 +366,66 @@
       });
     }
 
-    const partyNext = document.getElementById('q-party-next');
-    const partyErr = document.getElementById('q-party-err');
+    const partyNext = document.getElementById('r-party-next');
+    const partyErr = document.getElementById('r-party-err');
     partyNext.addEventListener('click', async () => {
       partyNext.disabled = true; partyErr.textContent = '';
       try {
-        await post('party', { members: state.members });
+        await postRespond('party', { members: state.members });
         const me = state.members.find((m) => m.name.toLowerCase() === state.name.toLowerCase());
-        enterGift(me ? me.attending : true);
+        enterThanks(me ? me.attending : true);
       } catch (err) {
         partyErr.textContent = err.message;
         partyNext.disabled = false;
       }
     });
 
-    /* Step 3 — gift? */
-    quiz.querySelectorAll('[data-gift]').forEach((btn) => {
-      btn.addEventListener('click', () => { btn.dataset.gift === 'yes' ? goto('method') : goto('thanks'); });
+    /* Thank-you card → gentle hand-off to the nqoot section */
+    const toNqoot = document.getElementById('r-to-nqoot');
+    if (toNqoot) toNqoot.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (lenis) lenis.scrollTo('#nqoot', { offset: -20, duration: 0.9 });
+      else document.getElementById('nqoot').scrollIntoView({ behavior: 'smooth' });
     });
+  }
 
-    /* Step 4 — method */
-    quiz.querySelectorAll('[data-method]').forEach((btn) => {
+  /* ----------------------------------------------------------- Nqoot flow -- */
+  function buildNqoot() {
+    const panel = document.getElementById('gift');
+    if (!panel) return;
+    const goto = makeStepper(panel, '#nqoot');
+    const state = { name: null, method: null, amount: null };
+
+    /* Step 1 — name (recorded for the couple's records; not an RSVP) */
+    const nameNext = document.getElementById('g-name-next');
+    const nameErr = document.getElementById('g-name-err');
+    setupAutocomplete(document.getElementById('g-name'), document.getElementById('g-suggestions'),
+      (name) => { state.name = name; nameNext.disabled = false; },
+      () => { state.name = null; nameNext.disabled = true; nameErr.textContent = ''; });
+    nameNext.addEventListener('click', () => { if (state.name) goto('method'); });
+
+    /* Step 2 — method */
+    panel.querySelectorAll('[data-method]').forEach((btn) => {
       btn.addEventListener('click', () => { state.method = btn.dataset.method; goto('amount'); });
     });
 
-    /* Step 5 — amount */
-    const amountInput = document.getElementById('q-amount');
-    const amountBtns = quiz.querySelectorAll('.amount-btn');
-    const amountNext = document.getElementById('q-amount-next');
+    /* Step 3 — amount */
+    const amountInput = document.getElementById('g-amount');
+    const amountBtns = panel.querySelectorAll('.amount-btn');
+    const amountNext = document.getElementById('g-amount-next');
     amountBtns.forEach((b) => b.addEventListener('click', () => { amountBtns.forEach((x) => x.classList.remove('selected')); b.classList.add('selected'); amountInput.value = b.dataset.amount; }));
     amountInput.addEventListener('input', () => amountBtns.forEach((x) => x.classList.remove('selected')));
     amountNext.addEventListener('click', () => {
       const amt = Number(amountInput.value);
       if (!Number.isFinite(amt) || amt <= 0) { amountInput.focus(); return; }
       state.amount = amt;
-      // Configure the pay step for the chosen method.
-      document.getElementById('q-pay-card').hidden = state.method !== 'card';
-      document.getElementById('q-pay-zelle').hidden = state.method !== 'zelle';
-      document.getElementById('q-pay-title').textContent = state.method === 'zelle' ? `Send $${amt} via Zelle` : `Send $${amt} by card`;
+      document.getElementById('g-pay-card').hidden = state.method !== 'card';
+      document.getElementById('g-pay-zelle').hidden = state.method !== 'zelle';
+      document.getElementById('g-pay-title').textContent = state.method === 'zelle' ? `Send $${amt} via Zelle` : `Send $${amt} by card`;
       goto('pay');
     });
 
-    /* Step 6 — pay */
+    /* Step 4 — pay */
     const stripeLink = document.getElementById('stripe-pay-link');
     if (stripeLink && stripeLink.dataset.placeholder === 'true') {
       stripeLink.style.opacity = '0.55';
@@ -419,20 +436,18 @@
       navigator.clipboard.writeText(zelleBtn.querySelector('.zelle__num').textContent.trim())
         .then(() => { const h = document.getElementById('zelle-copied'); h.textContent = 'Copied!'; setTimeout(() => { h.textContent = 'Tap to copy'; }, 2000); }).catch(() => {});
     });
-    const done = document.getElementById('q-done');
-    const payErr = document.getElementById('q-pay-err');
+    const done = document.getElementById('g-done');
+    const payErr = document.getElementById('g-pay-err');
     done.addEventListener('click', async () => {
       done.disabled = true; payErr.textContent = '';
       try {
-        await post('gift', { name: state.name, method: state.method, amount: state.amount });
-        document.getElementById('q-thanks-title').textContent = 'Thank you';
-        document.getElementById('q-thanks-sub').textContent = 'Your generosity means the world to us.';
+        await postRespond('gift', { name: state.name, method: state.method, amount: state.amount });
         goto('thanks');
       } catch (err) { payErr.textContent = err.message; done.disabled = false; }
     });
 
     /* Back buttons */
-    quiz.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => goto(b.dataset.back)));
+    panel.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => goto(b.dataset.back)));
   }
 
   /* --------------------------------------------------------------- Boot ---- */
@@ -452,7 +467,8 @@
       document.querySelectorAll('.photo-wipe').forEach((el) => { el.style.clipPath = 'inset(0 0 0% 0)'; });
     }
     buildCountdown();
-    buildQuiz();
+    buildRsvp();
+    buildNqoot();
     buildAdminDot();
   }
 
