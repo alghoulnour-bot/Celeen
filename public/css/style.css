@@ -78,10 +78,10 @@ img { max-width: 100%; display: block; }
 /* Same blooms tucked ONTO the four corners of the envelope face (positive
    insets so the cluster sits on the paper, not hovering off the edge) */
 .env-bloom { position: absolute; width: 27%; line-height: 0; z-index: 8; pointer-events: none; }
-.env-bloom--tl { top: 1.5%; left: 1.5%; }
-.env-bloom--tr { top: 1.5%; right: 1.5%; transform: scaleX(-1); }
-.env-bloom--bl { bottom: 1.5%; left: 1.5%; transform: scaleY(-1); }
-.env-bloom--br { bottom: 1.5%; right: 1.5%; transform: scale(-1, -1); }
+.env-bloom--tl { top: -1%; left: -1%; }
+.env-bloom--tr { top: -1%; right: -1%; transform: scaleX(-1); }
+.env-bloom--bl { bottom: -1%; left: -1%; transform: scaleY(-1); }
+.env-bloom--br { bottom: -1%; right: -1%; transform: scale(-1, -1); }
 
 .scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 55; pointer-events: none; }
 .scroll-progress span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, transparent, var(--gold)); }
