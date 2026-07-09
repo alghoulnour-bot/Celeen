@@ -208,21 +208,30 @@ img { max-width: 100%; display: block; }
   position: relative; width: min(92vw, 640px); height: min(57vw, 420px);
   transform-style: preserve-3d;
 }
-/* Centred in CSS too, so it's not off-screen for a frame before JS runs. GSAP
-   zeroes its px `x` when it takes over (x:0, xPercent:-50) so the two don't
-   stack. */
-.letter { position: absolute; left: 50%; top: 15%; width: 82%; transform: translateX(-50%); z-index: 2; will-change: transform; }
-.letter__inner {
-  background: var(--paper-tex), linear-gradient(180deg, var(--paper), #F3ECDA);
-  background-blend-mode: soft-light; background-size: 150px, cover;
-  border: 1px solid var(--line-soft); border-radius: 3px;
-  box-shadow: 0 16px 34px -20px rgba(44,39,28,0.45);
-  padding: clamp(1.5rem, 4vw, 2.4rem) 1.4rem; text-align: center;
+/* ---- The scene the envelope opens into ------------------------------------ */
+.hero-scene { position: absolute; inset: 0; z-index: 1; opacity: 0; overflow: hidden; }
+.hero-scene__img { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; filter: sepia(0.10) saturate(0.92) contrast(0.98); }
+/* Scrim so the overlaid names stay legible against the bright chandeliers —
+   darkest right behind the title, softer at the edges. */
+.hero-scene__veil {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(66% 44% at 50% 47%, rgba(26,20,10,0.55), transparent 74%),
+    linear-gradient(180deg, rgba(26,20,10,0.34), transparent 28%, transparent 56%, rgba(26,20,10,0.52));
 }
-.letter__eyebrow { display: block; font-family: var(--sans); font-weight: 400; font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold-deep); margin-bottom: 0.55rem; }
-.letter__names-ar { display: block; font-family: 'Aref Ruqaa', var(--ar); font-weight: 700; font-size: clamp(1.4rem, 4.4vw, 2.2rem); color: var(--green); margin-bottom: 0.5rem; line-height: 1.3; }
-.letter__names { font-family: var(--script); font-weight: 400; font-size: clamp(2.4rem, 8vw, 3.9rem); line-height: 1; color: var(--ink); }
-.letter__date { display: block; font-family: var(--sans); font-weight: 300; font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-soft); margin-top: 0.9rem; }
+.hero-scene__title {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 92%; text-align: center; color: var(--bone);
+}
+.hero-scene__eyebrow { display: block; font-family: var(--sans); font-size: 0.62rem; letter-spacing: 0.34em; text-transform: uppercase; color: var(--gold-lt); margin-bottom: 0.9rem; }
+.hero-scene__names {
+  font-family: var(--script); font-weight: 400; font-size: clamp(2.9rem, 9vw, 5.6rem);
+  line-height: 1.02; color: #FBF6EA; text-shadow: 0 14px 40px rgba(24,18,8,0.55);
+}
+.hero-scene__date { display: block; font-family: var(--sans); font-weight: 300; font-size: 0.68rem; letter-spacing: 0.32em; text-transform: uppercase; color: rgba(251,246,234,0.88); margin-top: 1.2rem; }
+
+/* The white bloom that hides the envelope→ballroom swap */
+.hero-flash { position: absolute; inset: 0; z-index: 20; background: #FFFDF7; opacity: 0; pointer-events: none; }
 
 /* Back panel doubles as the inner lining — lighter, with a soft top inner
    shadow so that once the flap opens you're clearly looking *inside*. */
@@ -344,14 +353,7 @@ img { max-width: 100%; display: block; }
 }
 .frame img { filter: sepia(0.16) saturate(0.92) contrast(0.97) brightness(1.03); }
 
-.hero-photo {
-  position: absolute; left: 50%; top: 0;
-  width: min(66vw, 300px); z-index: 4; opacity: 0;
-  will-change: transform, opacity;
-}
-.hero-photo img { display: block; width: 100%; aspect-ratio: 5 / 6.9; object-fit: cover; object-position: center 16%; }
-
-/* Shortcut buttons that appear below the photo once the hero has opened */
+/* Shortcut buttons that appear once the hero has opened */
 .hero-ctas {
   position: absolute; left: 50%; bottom: clamp(1.8rem, 5vh, 3.4rem); z-index: 5; opacity: 0;
   display: flex; gap: 0.7rem; flex-wrap: wrap; justify-content: center;
@@ -364,8 +366,14 @@ img { max-width: 100%; display: block; }
   transition: background 0.35s var(--ease), box-shadow 0.35s var(--ease), color 0.35s var(--ease);
 }
 .hero-cta:hover { background: var(--green-deep); box-shadow: 0 18px 34px -14px rgba(44,39,28,0.6); }
-.hero-cta--ghost { background: transparent; color: var(--green-deep); border: 1px solid var(--green); box-shadow: none; }
-.hero-cta--ghost:hover { background: var(--green); color: var(--bone); }
+/* Sits over the ballroom photo, so it reads light rather than dark gold */
+.hero-cta--ghost {
+  background: rgba(255,255,255,0.10); color: #FBF6EA;
+  border: 1px solid rgba(251,246,234,0.65);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  box-shadow: none;
+}
+.hero-cta--ghost:hover { background: rgba(255,255,255,0.2); color: #FFF; border-color: #FBF6EA; }
 
 /* Gentle link from the RSVP thank-you card over to the nqoot flow */
 .q__link {
@@ -557,10 +565,13 @@ input:focus { outline: none; border-color: var(--gold); background: var(--paper)
 .section__sub { font-family: var(--serif); font-style: italic; color: var(--ink-soft); margin-top: 0.8rem; }
 .gallery { margin-top: 3rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(0.9rem, 2.4vw, 1.8rem); align-items: start; }
 .gallery__item { background: var(--paper); padding: 10px 10px 38px; border: 1px solid var(--line-soft); box-shadow: 0 26px 44px -30px rgba(44,39,28,0.5); }
-.gallery__item img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; filter: sepia(0.14) saturate(0.94) contrast(0.97); }
+/* Every source photo is portrait (~0.67 / 0.56), so the slots stay tall and the
+   crop is biased upward — otherwise `cover` slices the tops of their heads. */
+.gallery__item img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; object-position: center 20%; filter: sepia(0.14) saturate(0.94) contrast(0.97); }
 .gallery__item:nth-child(2) { margin-top: clamp(2rem, 6vw, 4.5rem); }
-.gallery__item:nth-child(3) { grid-column: 1 / -1; max-width: 62%; margin: clamp(1rem, 3vw, 2rem) auto 0; }
-.gallery__item:nth-child(3) img { aspect-ratio: 3 / 2; }
+.gallery__item:nth-child(2) img { object-position: center 13%; } /* couple-3 is the tallest → crops most */
+.gallery__item:nth-child(3) { grid-column: 1 / -1; max-width: 52%; margin: clamp(1rem, 3vw, 2rem) auto 0; }
+.gallery__item:nth-child(3) img { aspect-ratio: 4 / 5; object-position: center 18%; }
 @media (max-width: 600px) { .gallery__item:nth-child(3) { max-width: 82%; } }
 
 /* ============================ DRESS CODE ============================= */
@@ -637,3 +648,48 @@ input:focus { border-color: var(--gold); box-shadow: inset 0 1px 3px rgba(44,39,
   background: var(--paper-tex), linear-gradient(180deg, var(--paper), #F4EDDC);
   background-blend-mode: soft-light; background-size: 150px, cover;
 }
+
+/* ============================ GUEST REACTIONS ======================== */
+.likes {
+  position: fixed; left: clamp(1rem, 2.5vw, 1.8rem); bottom: clamp(1.2rem, 3vw, 2rem);
+  z-index: 70; display: flex; align-items: center; gap: 0.6rem;
+}
+.likes[hidden] { display: none; }
+.likes__btn {
+  position: relative; width: 46px; height: 46px; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; color: #B4544F;
+  background: rgba(243,236,220,0.82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 10px 20px -12px rgba(44,39,28,0.5);
+  transition: transform 0.22s var(--ease), background 0.3s var(--ease);
+}
+.likes__btn:hover { background: var(--paper); }
+.likes__btn:active { transform: scale(0.88); }
+.likes__btn svg { fill: currentColor; }
+.likes__btn.is-thumped { animation: like-thump 0.32s var(--ease); }
+@keyframes like-thump { 0% { transform: scale(1); } 38% { transform: scale(1.26); } 100% { transform: scale(1); } }
+
+.likes__count {
+  font-family: var(--sans); font-size: 0.74rem; letter-spacing: 0.06em;
+  color: var(--ink-soft); font-variant-numeric: tabular-nums;
+  background: rgba(243,236,220,0.82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  border: 1px solid var(--line-soft); border-radius: 999px; padding: 0.34rem 0.7rem;
+  box-shadow: 0 10px 20px -14px rgba(44,39,28,0.5);
+  order: 2; /* count sits to the right of the heart */
+}
+
+/* Hearts float up out of the button */
+.likes__stage { position: absolute; left: 23px; bottom: 46px; width: 0; height: 0; pointer-events: none; }
+.heart {
+  position: absolute; left: 0; bottom: 0; width: 16px; height: 16px;
+  color: #B4544F; opacity: 0; will-change: transform, opacity;
+  animation: heart-rise var(--dur, 1.6s) cubic-bezier(0.22, 0.7, 0.3, 1) forwards;
+}
+.heart svg { width: 100%; height: 100%; fill: currentColor; }
+@keyframes heart-rise {
+  0%   { opacity: 0; transform: translate(-50%, 0) scale(0.5) rotate(0deg); }
+  12%  { opacity: 0.95; }
+  70%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-1 * var(--rise, 130px))) scale(var(--sc, 1.1)) rotate(var(--rot, 0deg)); }
+}
+@media (prefers-reduced-motion: reduce) { .heart { display: none; } }

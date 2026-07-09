@@ -81,12 +81,13 @@
   function buildHero() {
     const envelope = document.getElementById('envelope');
     const flap = document.getElementById('envelope-flap');
-    const letter = document.getElementById('letter');
     const seal = document.getElementById('envelope-seal');
     const scene = document.getElementById('envelope-scene');
-    const photo = document.getElementById('hero-photo');
+    const heroScene = document.getElementById('hero-scene');
+    const heroTitle = document.getElementById('hero-scene-title');
+    const flash = document.getElementById('hero-flash');
     const cta = document.getElementById('hero-cta');
-    if (!envelope || !letter) return;
+    if (!envelope || !heroScene) return;
 
     // Jump to the matching questionnaire when a hero CTA is clicked.
     if (cta) cta.querySelectorAll('a[href^="#"]').forEach((a) => {
@@ -100,13 +101,20 @@
     // it otherwise reads as pixels), which shoved the envelope off-centre on
     // mobile.
     gsap.set(scene, { x: 0, y: 0, xPercent: -50, yPercent: -50 });
-    gsap.set(letter, { x: 0, xPercent: -50 });
-    gsap.set(photo, { xPercent: -50, y: () => window.innerHeight * 1.05, opacity: 0 });
+    gsap.set(seal, { x: 0, xPercent: -50 }); // matches the CSS translateX(-50%)
     if (cta) gsap.set(cta, { xPercent: -50, autoAlpha: 0, y: 12 });
+    gsap.set(heroScene, { autoAlpha: 0 });
+    gsap.set(heroTitle, { autoAlpha: 0, y: 18 });
 
-    const vh = () => window.innerHeight;
     const hint = document.getElementById('hero-hint');
     const skip = document.getElementById('hero-skip');
+
+    // How far the flap's apex travels when it flips: the flap mirrors about its
+    // own centre, so the apex goes from y=flapHeight to y=0. The seal rides it.
+    const flapTravel = () => {
+      const pct = parseFloat(getComputedStyle(envelope).getPropertyValue('--flap-h')) || 66;
+      return -(envelope.clientHeight * pct) / 100;
+    };
 
     // The page stays locked behind the sealed envelope until it's opened.
     function lockScroll() {
@@ -121,40 +129,37 @@
     }
 
     if (prefersReduced) {
-      gsap.set(flap, { scaleY: -1 });
-      gsap.set(seal, { autoAlpha: 0 });
-      gsap.set('.envelope__back, .envelope__front, .env-bloom', { autoAlpha: 0 });
-      gsap.set(letter, { x: 0, xPercent: -50, y: -vh() * 0.26, scale: 1.02 });
-      gsap.set(photo, { y: vh() * 0.30, opacity: 1 });
+      gsap.set(scene, { autoAlpha: 0 });
+      gsap.set(heroScene, { autoAlpha: 1 });
+      gsap.set(heroTitle, { autoAlpha: 1, y: 0 });
       if (cta) gsap.set(cta, { xPercent: -50, autoAlpha: 1, y: 0 });
       if (hint) gsap.set(hint, { autoAlpha: 0 });
       unlockScroll();
       return;
     }
 
-    // Time-based (not scrubbed): the whole opening plays on tap.
-    const tl = gsap.timeline({
-      paused: true,
-      onUpdate: () => { flap.style.zIndex = tl.progress() > 0.32 ? '1' : '6'; },
-      onComplete: unlockScroll,
-    });
+    // Time-based (not scrubbed): the whole opening plays on tap. Nothing slides
+    // out of the envelope — it simply opens, blooms to white, and dissolves
+    // into the ballroom.
+    const tl = gsap.timeline({ paused: true });
 
-    tl.to(hint, { autoAlpha: 0, y: 14, duration: 0.25, ease: 'power1.out' }, 0)
-      // Flap opens UPWARD — flips up above the envelope (apex up) and stays,
-      // like a real open envelope, instead of being erased.
-      .to(flap, { scaleY: -1, duration: 0.85, ease: 'power2.inOut' }, 0.05)
-      .to(seal, { autoAlpha: 0, scale: 0.5, duration: 0.4, ease: 'power1.in' }, 0.05)
-      // Corner blooms clear off the envelope as it begins to open.
-      .to('.env-bloom', { autoAlpha: 0, duration: 0.4, ease: 'power1.in' }, 0.05)
-      // Card comes out right after; the envelope dissolves quickly and the
-      // photo rises up beneath — all overlapping so it doesn't drag.
-      .to(letter, { x: 0, xPercent: -50, y: () => -vh() * 0.26, scale: 1.02, duration: 0.6, ease: 'power2.out' }, 0.85)
-      .to(['.envelope__back', '.envelope__front', '#envelope-seal'],
-          { autoAlpha: 0, duration: 0.4, ease: 'power1.inOut' }, 0.9)
-      // The open flap lingers a beat (clearly shown open), then tidies away.
-      .to(flap, { autoAlpha: 0, duration: 0.35, ease: 'power1.in' }, 1.15)
-      .to(photo, { y: () => vh() * 0.30, opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.95)
-      .to(cta, { autoAlpha: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 1.25);
+    tl.to(hint, { autoAlpha: 0, y: 14, duration: 0.35, ease: 'power1.out' }, 0)
+      // Flap lifts slowly, and the wax seal travels up with it, still stuck on.
+      .to(flap, { scaleY: -1, duration: 1.9, ease: 'power2.inOut' }, 0.2)
+      .to(seal, { y: flapTravel, duration: 1.9, ease: 'power2.inOut' }, 0.2)
+      // A beat with the envelope sitting open, then the white bloom.
+      .to(flash, { opacity: 1, duration: 0.6, ease: 'power2.in' }, 2.45)
+      // Hidden behind the white: swap the envelope out for the ballroom.
+      .set(scene, { autoAlpha: 0 }, 3.05)
+      .set(heroScene, { autoAlpha: 1 }, 3.05)
+      .to(flash, { opacity: 0, duration: 1.1, ease: 'power2.out' }, 3.1)
+      // Slow drift on the photo itself (not the container — it holds the title).
+      .to('.hero-scene__img', { scale: 1.06, duration: 3.4, ease: 'power1.out' }, 3.1)
+      .to(heroTitle, { autoAlpha: 1, y: 0, duration: 1.0, ease: 'power2.out' }, 3.5)
+      .to(cta, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' }, 4.0)
+      // Hand the page back as soon as the scene has settled — the slow drift on
+      // the photo keeps running past this and must not hold the scroll lock.
+      .call(unlockScroll, null, 4.4);
 
     let opened = false;
     function openEnvelope() {
@@ -280,6 +285,61 @@
         : `<span class="cal__day">${d}</span>`;
     }
     grid.innerHTML = html;
+  }
+
+  /* -------------------------------------------------------- Guest reactions */
+  // Decorative only — the count is not persisted anywhere. It starts at a warm
+  // number, climbs when a guest taps, and ticks up on its own now and then so
+  // the invitation feels like other people are looking at it too.
+  function buildLikes() {
+    const wrap = document.getElementById('likes');
+    const btn = document.getElementById('likes-btn');
+    const countEl = document.getElementById('likes-count');
+    const stage = document.getElementById('likes-stage');
+    if (!wrap || !btn || !countEl || !stage) return;
+
+    const HEART = '<svg viewBox="0 0 24 24"><path d="M12 20.7l-1.3-1.2C6 15.4 3 12.7 3 9.3 3 6.7 5 4.7 7.5 4.7c1.5 0 2.9.7 3.8 1.8h1.4c.9-1.1 2.3-1.8 3.8-1.8C19 4.7 21 6.7 21 9.3c0 3.4-3 6.1-7.7 10.2L12 20.7z"/></svg>';
+    let count = 89;
+    wrap.hidden = false;
+
+    function render() { countEl.textContent = count.toLocaleString(); }
+    render();
+
+    function floatHeart() {
+      const h = document.createElement('span');
+      h.className = 'heart';
+      h.innerHTML = HEART;
+      const dur = 1.3 + Math.random() * 0.9;
+      h.style.setProperty('--dur', dur + 's');
+      h.style.setProperty('--dx', (Math.random() * 64 - 32).toFixed(0) + 'px');
+      h.style.setProperty('--rise', (105 + Math.random() * 80).toFixed(0) + 'px');
+      h.style.setProperty('--sc', (0.85 + Math.random() * 0.7).toFixed(2));
+      h.style.setProperty('--rot', (Math.random() * 50 - 25).toFixed(0) + 'deg');
+      stage.appendChild(h);
+      setTimeout(() => h.remove(), dur * 1000 + 120);
+    }
+
+    btn.addEventListener('click', () => {
+      count += 1;
+      render();
+      floatHeart();
+      btn.classList.remove('is-thumped');
+      void btn.offsetWidth; // restart the keyframe so rapid taps each thump
+      btn.classList.add('is-thumped');
+    });
+
+    // Every so often, "someone else" reacts — a small barrage, counted in.
+    function otherGuestLikes() {
+      const burst = 2 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < burst; i++) {
+        setTimeout(() => { count += 1; render(); floatHeart(); }, i * 190);
+      }
+      schedule();
+    }
+    function schedule() {
+      setTimeout(otherGuestLikes, 9000 + Math.random() * 16000);
+    }
+    schedule();
   }
 
   /* ----------------------------------------------------- Background music -- */
@@ -567,6 +627,7 @@
     buildCountdown();
     buildCalendar();
     buildMusic();
+    buildLikes();
     buildRsvp();
     buildNqoot();
     buildAdminDot();
