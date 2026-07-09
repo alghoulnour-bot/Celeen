@@ -181,9 +181,10 @@ img { max-width: 100%; display: block; }
 .envelope-scene.is-tappable .envelope__seal { transition: transform 0.4s var(--ease); }
 .envelope-scene.is-tappable:hover .envelope__seal { transform: translateX(-50%) scale(1.05); }
 
-/* Discreet bail-out for guests who don't want the animation */
+/* Discreet bail-out for guests who don't want the animation. Sits above the
+   music toggle, which shares the bottom-right corner. */
 .hero__skip {
-  position: absolute; right: clamp(1rem, 3vw, 2rem); bottom: clamp(1.2rem, 4vh, 2.2rem);
+  position: absolute; right: clamp(1rem, 3vw, 2rem); bottom: calc(clamp(1.2rem, 3vw, 2rem) + 56px);
   z-index: 9; background: none; border: 0; cursor: pointer;
   font-family: var(--sans); font-size: 0.62rem; letter-spacing: 0.26em; text-transform: uppercase;
   color: var(--ink-soft); opacity: 0.6; transition: opacity 0.3s var(--ease);
@@ -308,10 +309,10 @@ img { max-width: 100%; display: block; }
    (Must come after the .envelope rules above — same specificity, later wins.) */
 @media (max-width: 760px) {
   .envelope {
-    --flap-h: 35%;   /* shallower flap → less headroom needed when it stands up */
+    --flap-h: 35%;
     --seal-r: 44px;
-    width: min(95vw, 470px);
-    height: min(168vw, 88dvh);
+    width: min(96vw, 480px);
+    height: min(196vw, 96dvh); /* the raised flap is free to run off the top */
   }
 }
 
@@ -588,7 +589,7 @@ input:focus { outline: none; border-color: var(--gold); background: var(--paper)
 
 /* ============================ MUSIC TOGGLE =========================== */
 .music {
-  position: fixed; top: clamp(1rem, 2.5vw, 1.8rem); right: clamp(1rem, 2.5vw, 1.8rem); z-index: 70;
+  position: fixed; bottom: clamp(1.2rem, 3vw, 2rem); right: clamp(1rem, 2.5vw, 1.8rem); z-index: 70;
   width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
   background: rgba(243,236,220,0.82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   border: 1px solid var(--line-soft); color: var(--green-deep);

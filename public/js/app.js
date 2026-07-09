@@ -119,19 +119,22 @@
     };
     const flapTravel = () => -2 * flapHeight();
 
-    // Standing the flap up adds a flap-height (plus the seal) of content above
-    // the envelope. On phones the envelope nearly fills the screen, so that
-    // won't fit — ease the scene down AND pull it back just enough that the
-    // open envelope, its raised flap and the seal all stay in frame.
+    // Standing the flap up puts its tip above the envelope. Where there's spare
+    // room below (desktop) we ease the scene down so the tip and seal stay in
+    // view. Where there isn't (a phone, where the envelope fills the screen) we
+    // simply let the flap travel off the top — never scale the scene down, and
+    // never push the envelope's bottom out of frame.
     const PAD = 16;
-    const sceneFit = () => {
+    const sceneShift = () => {
       const heroH = document.getElementById('hero-pin').clientHeight;
       const envH = envelope.clientHeight;
       const sealR = parseFloat(getComputedStyle(envelope).getPropertyValue('--seal-r')) || 38;
-      const contentH = envH + flapHeight() + sealR;
-      const scale = Math.min(1, (heroH - 2 * PAD) / contentH); // 1 on desktop; slight pull-back on phones
-      const top = heroH / 2 - scale * (envH / 2 + flapHeight() + sealR);
-      return { scale, y: Math.max(0, PAD - top) };
+      const tipTop = heroH / 2 - envH / 2 - flapHeight();
+      const wanted = Math.max(0, sealR + 18 - tipTop);        // to clear the top edge
+      const room = Math.max(0, heroH - PAD - (heroH / 2 + envH / 2)); // space under the envelope
+      // Only move if the move actually achieves something. A partial shift just
+      // slides the envelope down while the tip stays off-screen anyway.
+      return wanted <= room ? wanted : 0;
     };
 
     // The page stays locked behind the sealed envelope until it's opened.
@@ -166,20 +169,20 @@
       // Same ease + duration on both, so the seal tracks the apex every frame.
       .to(flap, { scaleY: -1, duration: 1.9, ease: 'power2.inOut' }, 0.2)
       .to(seal, { y: flapTravel, duration: 1.9, ease: 'power2.inOut' }, 0.2)
-      .to(scene, { y: () => sceneFit().y, scale: () => sceneFit().scale, duration: 1.9, ease: 'power2.inOut' }, 0.2)
-      // A beat with the envelope sitting open, then the white bloom.
-      .to(flash, { opacity: 1, duration: 0.6, ease: 'power2.in' }, 2.45)
+      .to(scene, { y: sceneShift, duration: 1.9, ease: 'power2.inOut' }, 0.2)
+      // The flap lands at 2.1 — bloom to white straight away, no dead beat.
+      .to(flash, { opacity: 1, duration: 0.5, ease: 'power2.in' }, 2.1)
       // Hidden behind the white: swap the envelope out for the ballroom.
-      .set(scene, { autoAlpha: 0 }, 3.05)
-      .set(heroScene, { autoAlpha: 1 }, 3.05)
-      .to(flash, { opacity: 0, duration: 1.1, ease: 'power2.out' }, 3.1)
+      .set(scene, { autoAlpha: 0 }, 2.6)
+      .set(heroScene, { autoAlpha: 1 }, 2.6)
+      .to(flash, { opacity: 0, duration: 1.0, ease: 'power2.out' }, 2.65)
       // Slow drift on the photo itself (not the container — it holds the title).
-      .to('.hero-scene__img', { scale: 1.06, duration: 3.4, ease: 'power1.out' }, 3.1)
-      .to(heroTitle, { autoAlpha: 1, y: 0, duration: 1.0, ease: 'power2.out' }, 3.5)
-      .to(cta, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' }, 4.0)
+      .to('.hero-scene__img', { scale: 1.06, duration: 3.4, ease: 'power1.out' }, 2.65)
+      .to(heroTitle, { autoAlpha: 1, y: 0, duration: 1.0, ease: 'power2.out' }, 2.95)
+      .to(cta, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' }, 3.45)
       // Hand the page back as soon as the scene has settled — the slow drift on
       // the photo keeps running past this and must not hold the scroll lock.
-      .call(unlockScroll, null, 4.4);
+      .call(unlockScroll, null, 3.85);
 
     let opened = false;
     function openEnvelope() {
