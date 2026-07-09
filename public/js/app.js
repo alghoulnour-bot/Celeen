@@ -172,21 +172,24 @@
       .to(flap, { scaleY: -1, duration: 1.9, ease: 'power2.inOut' }, 0.2)
       .to(seal, { y: flapTravel, duration: 1.9, ease: 'power2.inOut' }, 0.2)
       .to(scene, { y: sceneShift, duration: 1.9, ease: 'power2.inOut' }, 0.2)
-      // The flap lands at 2.1 — bloom to white straight away, no dead beat.
-      .to(flash, { opacity: 1, duration: 0.5, ease: 'power2.in' }, 2.1)
+      // Bloom to white halfway through the lift (the flap runs 0.2→2.1), while
+      // pushing gently INTO the envelope — it reads as going inside rather than
+      // watching the flap finish.
+      .to(flash, { opacity: 1, duration: 0.55, ease: 'power2.in' }, 1.15)
+      .to(scene, { scale: 1.14, duration: 0.8, ease: 'power2.in' }, 1.1)
       // Hidden behind the white: swap the envelope out for the ballroom.
-      .set(scene, { autoAlpha: 0 }, 2.6)
-      .set(heroScene, { autoAlpha: 1 }, 2.6)
-      .to(flash, { opacity: 0, duration: 1.0, ease: 'power2.out' }, 2.65)
+      .set(scene, { autoAlpha: 0 }, 1.7)
+      .set(heroScene, { autoAlpha: 1 }, 1.7)
+      .to(flash, { opacity: 0, duration: 1.0, ease: 'power2.out' }, 1.75)
       // Slow drift on the photo itself (not the container — it holds the title).
-      .to('.hero-scene__img', { scale: 1.06, duration: 3.4, ease: 'power1.out' }, 2.65)
-      .to(heroTitle, { autoAlpha: 1, y: 0, duration: 1.0, ease: 'power2.out' }, 2.95)
+      .to('.hero-scene__img', { scale: 1.06, duration: 3.4, ease: 'power1.out' }, 1.75)
+      .to(heroTitle, { autoAlpha: 1, y: 0, duration: 1.0, ease: 'power2.out' }, 2.05)
       // The floral corners settle in once the ballroom is showing.
-      .to('.vines', { autoAlpha: 1, duration: 1.2, ease: 'power2.out' }, 3.0)
-      .to(cta, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' }, 3.45)
+      .to('.vines', { autoAlpha: 1, duration: 1.2, ease: 'power2.out' }, 2.1)
+      .to(cta, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' }, 2.55)
       // Hand the page back as soon as the scene has settled — the slow drift on
       // the photo keeps running past this and must not hold the scroll lock.
-      .call(unlockScroll, null, 3.85);
+      .call(unlockScroll, null, 2.95);
 
     let opened = false;
     function openEnvelope() {

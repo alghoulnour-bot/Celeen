@@ -238,6 +238,20 @@ img { max-width: 100%; display: block; }
   border-radius: 6px;
   box-shadow: 0 36px 70px -34px rgba(44,39,28,0.5), inset 0 30px 40px -20px rgba(0,0,0,0.45);
 }
+/* A plain card tucked inside, sitting between the liner and the front panel.
+   It never moves — it just shows through the V once the flap lifts, so the
+   envelope reads as holding something. */
+.envelope__paper {
+  /* Sunk into the envelope: its top edge sits below the opening so the gold
+     liner still frames it, rather than the whole V turning white. */
+  position: absolute; left: 9%; right: 9%; top: 15%; bottom: 6%; z-index: 2;
+  background: var(--paper-tex), linear-gradient(180deg, #FBF7EC, #F1EADB);
+  background-blend-mode: soft-light; background-size: 150px, cover;
+  border-radius: 1px;
+  box-shadow:
+    0 -6px 14px -6px rgba(28,20,6,0.55),        /* the liner casts down onto it */
+    inset 0 14px 18px -14px rgba(44,39,28,0.45);
+}
 .envelope__front {
   position: absolute; inset: 0; z-index: 3;
   background: var(--paper-tex), linear-gradient(158deg, #E5D9BD, #D4C59F);
