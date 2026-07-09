@@ -312,7 +312,10 @@ img { max-width: 100%; display: block; }
    (Must come after the .envelope rules above — same specificity, later wins.) */
 @media (max-width: 760px) {
   .envelope {
-    --flap-h: 35%;
+    /* 50% puts the flap's apex — and the wax seal riding it — dead centre of the
+       envelope, which is itself centred on screen. The opening then happens at
+       the middle of the phone rather than up in the top third. */
+    --flap-h: 50%;
     --seal-r: 44px;
     width: min(99vw, 520px);
     height: min(212vw, 98dvh); /* the raised flap is free to run off the top */
