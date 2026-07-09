@@ -360,29 +360,18 @@ img { max-width: 100%; display: block; }
 }
 .envelope__seal .crest { position: relative; z-index: 2; line-height: 0; }
 
-/* Floral relief embossed into the cardstock. Same sculpted-flower art as the
-   page corners, but blended soft-light so its highlights and shadows press into
-   the envelope's own cream instead of sitting on top as white flowers. */
-.env-bloom, .flap-bloom {
-  position: absolute; line-height: 0; pointer-events: none;
-  /* multiply, not soft-light/overlay: against a base this light both compress
-     toward white (overlay gives barely a 14% swing). Multiply prints the
-     flowers' own shading into the cream, so the relief actually reads. */
+/* Floral relief embossed into the top flap only. Children of the flap, so they
+   lift with it, and the flap's ::after liner covers them once it turns over.
+   Multiply, not soft-light/overlay — against a base this light both compress
+   toward white and the relief simply doesn't read. */
+.flap-bloom {
+  position: absolute; width: 42%; line-height: 0; pointer-events: none;
   mix-blend-mode: multiply; opacity: 0.34;
 }
-.env-bloom img, .flap-bloom img { width: 100%; height: auto; display: block; }
-
-/* Bottom two corners live on the envelope face and never move. */
-.env-bloom { width: 34%; z-index: 5; }
-.env-bloom--bl { bottom: -1%; left: -1%; transform: scaleY(-1); }
-.env-bloom--br { bottom: -1%; right: -1%; transform: scale(-1, -1); }
-
-/* Top two are children of the flap, so they lift with it. The flap's ::after
-   liner paints over them once it turns, which hides them exactly when the
-   flap's outer face should no longer be visible. */
-.flap-bloom { width: 42%; }
+.flap-bloom img { width: 100%; height: auto; display: block; }
 .flap-bloom--l { top: -2%; left: -2%; }
 .flap-bloom--r { top: -2%; right: -2%; transform: scaleX(-1); }
+
 
 /* On phones the envelope stands upright and fills the screen, like a real
    invitation held in the hand. Shallower flap to suit the portrait shape.
