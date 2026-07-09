@@ -109,11 +109,24 @@
     const hint = document.getElementById('hero-hint');
     const skip = document.getElementById('hero-skip');
 
-    // How far the flap's apex travels when it flips: the flap mirrors about its
-    // own centre, so the apex goes from y=flapHeight to y=0. The seal rides it.
-    const flapTravel = () => {
+    // The flap mirrors about its TOP edge (transform-origin: 50% 0), so under
+    // scaleY(s) its apex sits at y = s * flapHeight: it travels from +H down to
+    // -H, i.e. 2H. Translating the seal by -2H with the same ease and duration
+    // keeps it welded to the apex on every frame, not just at the ends.
+    const flapHeight = () => {
       const pct = parseFloat(getComputedStyle(envelope).getPropertyValue('--flap-h')) || 66;
-      return -(envelope.clientHeight * pct) / 100;
+      return (envelope.clientHeight * pct) / 100;
+    };
+    const flapTravel = () => -2 * flapHeight();
+
+    // Standing the flap up puts its tip a flap-height above the envelope, which
+    // overruns the top of the pinned hero. Ease the whole scene down by however
+    // much is needed to keep the tip — and the whole seal riding it — in frame.
+    const sceneShift = () => {
+      const heroH = document.getElementById('hero-pin').clientHeight;
+      const sealR = parseFloat(getComputedStyle(envelope).getPropertyValue('--seal-r')) || 38;
+      const tipTop = heroH / 2 - envelope.clientHeight / 2 - flapHeight();
+      return Math.max(0, sealR + 18 - tipTop);
     };
 
     // The page stays locked behind the sealed envelope until it's opened.
@@ -145,8 +158,10 @@
 
     tl.to(hint, { autoAlpha: 0, y: 14, duration: 0.35, ease: 'power1.out' }, 0)
       // Flap lifts slowly, and the wax seal travels up with it, still stuck on.
+      // Same ease + duration on both, so the seal tracks the apex every frame.
       .to(flap, { scaleY: -1, duration: 1.9, ease: 'power2.inOut' }, 0.2)
       .to(seal, { y: flapTravel, duration: 1.9, ease: 'power2.inOut' }, 0.2)
+      .to(scene, { y: sceneShift, duration: 1.9, ease: 'power2.inOut' }, 0.2)
       // A beat with the envelope sitting open, then the white bloom.
       .to(flash, { opacity: 1, duration: 0.6, ease: 'power2.in' }, 2.45)
       // Hidden behind the white: swap the envelope out for the ballroom.
