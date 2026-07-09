@@ -40,7 +40,7 @@
 
   /* ------------------------------------------------ Botanical corner vine -- */
   // Sculpted white-plaster floral corner (real photo, background cut to
-  // transparency) — flowers hug the top-left origin; the .vine--*/.env-bloom--*
+  // transparency) — flowers hug the top-left origin; the .vine--*
   // transforms flip it into each corner.
   const CORNER_IMG = '<img class="vine__img" src="assets/flower-corner.png" alt="" aria-hidden="true" />';
   document.querySelectorAll('[data-vine]').forEach((el) => { el.innerHTML = CORNER_IMG; });
@@ -119,14 +119,19 @@
     };
     const flapTravel = () => -2 * flapHeight();
 
-    // Standing the flap up puts its tip a flap-height above the envelope, which
-    // overruns the top of the pinned hero. Ease the whole scene down by however
-    // much is needed to keep the tip — and the whole seal riding it — in frame.
-    const sceneShift = () => {
+    // Standing the flap up adds a flap-height (plus the seal) of content above
+    // the envelope. On phones the envelope nearly fills the screen, so that
+    // won't fit — ease the scene down AND pull it back just enough that the
+    // open envelope, its raised flap and the seal all stay in frame.
+    const PAD = 16;
+    const sceneFit = () => {
       const heroH = document.getElementById('hero-pin').clientHeight;
+      const envH = envelope.clientHeight;
       const sealR = parseFloat(getComputedStyle(envelope).getPropertyValue('--seal-r')) || 38;
-      const tipTop = heroH / 2 - envelope.clientHeight / 2 - flapHeight();
-      return Math.max(0, sealR + 18 - tipTop);
+      const contentH = envH + flapHeight() + sealR;
+      const scale = Math.min(1, (heroH - 2 * PAD) / contentH); // 1 on desktop; slight pull-back on phones
+      const top = heroH / 2 - scale * (envH / 2 + flapHeight() + sealR);
+      return { scale, y: Math.max(0, PAD - top) };
     };
 
     // The page stays locked behind the sealed envelope until it's opened.
@@ -161,7 +166,7 @@
       // Same ease + duration on both, so the seal tracks the apex every frame.
       .to(flap, { scaleY: -1, duration: 1.9, ease: 'power2.inOut' }, 0.2)
       .to(seal, { y: flapTravel, duration: 1.9, ease: 'power2.inOut' }, 0.2)
-      .to(scene, { y: sceneShift, duration: 1.9, ease: 'power2.inOut' }, 0.2)
+      .to(scene, { y: () => sceneFit().y, scale: () => sceneFit().scale, duration: 1.9, ease: 'power2.inOut' }, 0.2)
       // A beat with the envelope sitting open, then the white bloom.
       .to(flash, { opacity: 1, duration: 0.6, ease: 'power2.in' }, 2.45)
       // Hidden behind the white: swap the envelope out for the ballroom.

@@ -89,14 +89,6 @@ img { max-width: 100%; display: block; }
 .vine__img { width: 100%; height: auto; display: block; }
 @media (max-width: 600px) { .vine { width: 128px; } .vines { opacity: 0.95; } }
 
-/* Same blooms tucked ONTO the four corners of the envelope face (positive
-   insets so the cluster sits on the paper, not hovering off the edge) */
-.env-bloom { position: absolute; width: 27%; line-height: 0; z-index: 8; pointer-events: none; }
-.env-bloom--tl { top: -1%; left: -1%; }
-.env-bloom--tr { top: -1%; right: -1%; transform: scaleX(-1); }
-.env-bloom--bl { bottom: -1%; left: -1%; transform: scaleY(-1); }
-.env-bloom--br { bottom: -1%; right: -1%; transform: scale(-1, -1); }
-
 .scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 55; pointer-events: none; }
 .scroll-progress span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, transparent, var(--gold)); }
 
@@ -316,13 +308,11 @@ img { max-width: 100%; display: block; }
    (Must come after the .envelope rules above — same specificity, later wins.) */
 @media (max-width: 760px) {
   .envelope {
-    --flap-h: 44%;
-    --seal-r: 46px;
-    width: min(88vw, 440px);
-    height: min(132vw, 78dvh);
+    --flap-h: 35%;   /* shallower flap → less headroom needed when it stands up */
+    --seal-r: 44px;
+    width: min(95vw, 470px);
+    height: min(168vw, 88dvh);
   }
-  .letter { top: 11%; width: 84%; }
-  .env-bloom { width: 32%; }
 }
 
 /* ---- Old-money molding frame (tone-on-tone recessed panel, like wainscoting)
