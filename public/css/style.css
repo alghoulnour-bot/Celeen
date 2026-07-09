@@ -487,7 +487,9 @@ img { max-width: 100%; display: block; }
   clip-path: inset(0 0 100% 0); /* wipe reveal */
 }
 .photo-inner { position: relative; overflow: hidden; aspect-ratio: 7 / 5; }
-.photo-wipe img { width: 100%; height: 118%; object-fit: cover; will-change: transform; }
+/* A portrait photo in a 7/5 landscape box loses ~37% vertically to cover, so
+   bias the crop upward or it slices their heads off. */
+.photo-wipe img { width: 100%; height: 118%; object-fit: cover; object-position: center 22%; will-change: transform; }
 .moment__cap { font-family: var(--ar); font-size: clamp(1.6rem, 4vw, 2.4rem); color: var(--green-soft); margin-bottom: 2.2rem; }
 
 
