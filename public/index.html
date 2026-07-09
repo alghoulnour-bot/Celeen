@@ -206,17 +206,7 @@
           <p class="q__err" id="g-name-err" role="status"></p>
         </div>
 
-        <!-- Step 2: method -->
-        <div class="q" data-step="method" hidden>
-          <p class="q__title">How would you like to give?</p>
-          <div class="q__btns">
-            <button class="pill mag" data-method="card">Card / Apple Pay</button>
-            <button class="pill mag" data-method="zelle">Zelle</button>
-          </div>
-          <button class="q__back" data-back="name">&larr; Back</button>
-        </div>
-
-        <!-- Step 3: amount -->
+        <!-- Step 2: amount -->
         <div class="q" data-step="amount" hidden>
           <p class="q__title">How much would you like to give?</p>
           <div class="amount-presets">
@@ -228,38 +218,26 @@
           <button class="btn btn--primary btn--full mag" id="g-amount-next">
             <span>Continue</span><span class="btn__ico">&rarr;</span>
           </button>
-          <button class="q__back" data-back="method">&larr; Back</button>
+          <button class="q__back" data-back="name">&larr; Back</button>
         </div>
 
-        <!-- Step 4: pay -->
+        <!-- Step 3: pay (Stripe hosted checkout) -->
         <div class="q" data-step="pay" hidden>
-          <p class="q__title" id="g-pay-title">Send your gift</p>
-
-          <div id="g-pay-card" hidden>
-            <a id="stripe-pay-link" class="btn btn--primary btn--full mag" href="#" data-placeholder="true" target="_blank" rel="noopener">
-              <span>Pay by Card or Apple Pay</span><span class="btn__ico">&rarr;</span>
-            </a>
-            <p class="card__note" id="stripe-note">The couple's secure card link is added shortly — for now please use Zelle.</p>
-          </div>
-
-          <div id="g-pay-zelle" hidden>
-            <button type="button" id="zelle-number" class="zelle" title="Tap to copy">
-              <span class="zelle__label">Zelle to</span>
-              <span class="zelle__num">469-349-3827</span>
-              <span class="zelle__hint" id="zelle-copied">Tap to copy</span>
-            </button>
-          </div>
-
-          <button class="btn btn--outline btn--full mag" id="g-done"><span>I've sent my gift</span></button>
+          <p class="q__title">Your gift</p>
+          <p class="q__seat" id="g-pay-amount"></p>
+          <button class="btn btn--primary btn--full mag" id="g-pay">
+            <span>Pay by card</span><span class="btn__ico">&rarr;</span>
+          </button>
+          <p class="card__note">Secure checkout by Stripe · card or Apple Pay</p>
           <p class="q__err" id="g-pay-err" role="status"></p>
           <button class="q__back" data-back="amount">&larr; Back</button>
         </div>
 
-        <!-- Step 5: thanks -->
+        <!-- Step 4: thanks -->
         <div class="q q--thanks" data-step="thanks" hidden>
           <span class="crest" data-crest></span>
           <p class="q__title">Thank you</p>
-          <p class="q__sub">Your generosity means the world to us.</p>
+          <p class="q__sub" id="g-thanks-sub">Your generosity means the world to us.</p>
         </div>
 
       </div>

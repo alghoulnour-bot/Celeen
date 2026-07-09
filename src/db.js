@@ -14,6 +14,14 @@ async function init() {
     name_key text PRIMARY KEY,
     record jsonb NOT NULL
   )`;
+  // One row per completed Stripe Checkout session, so a card gift is only ever
+  // counted once even if the return page is reloaded.
+  await sql`CREATE TABLE IF NOT EXISTS gift_payments (
+    session_id text PRIMARY KEY,
+    name_key text NOT NULL,
+    amount integer NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
 }
 
 module.exports = { sql, init };

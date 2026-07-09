@@ -32,6 +32,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use('/api/guests', require('./routes/guests'));
 app.use('/api/respond', require('./routes/respond'));
+app.use('/api/nqoot', require('./routes/nqoot'));
 app.use('/admin', require('./routes/admin'));
 
 // eslint-disable-next-line no-unused-vars

@@ -390,7 +390,7 @@
     const panel = document.getElementById('gift');
     if (!panel) return;
     const goto = makeStepper(panel, '#nqoot');
-    const state = { name: null, method: null, amount: null };
+    const state = { name: null, amount: null };
 
     /* Step 1 — name (recorded for the couple's records; not an RSVP) */
     const nameNext = document.getElementById('g-name-next');
@@ -398,52 +398,68 @@
     setupAutocomplete(document.getElementById('g-name'), document.getElementById('g-suggestions'),
       (name) => { state.name = name; nameNext.disabled = false; },
       () => { state.name = null; nameNext.disabled = true; nameErr.textContent = ''; });
-    nameNext.addEventListener('click', () => { if (state.name) goto('method'); });
+    nameNext.addEventListener('click', () => { if (state.name) goto('amount'); });
 
-    /* Step 2 — method */
-    panel.querySelectorAll('[data-method]').forEach((btn) => {
-      btn.addEventListener('click', () => { state.method = btn.dataset.method; goto('amount'); });
-    });
-
-    /* Step 3 — amount */
+    /* Step 2 — amount */
     const amountInput = document.getElementById('g-amount');
     const amountBtns = panel.querySelectorAll('.amount-btn');
     const amountNext = document.getElementById('g-amount-next');
     amountBtns.forEach((b) => b.addEventListener('click', () => { amountBtns.forEach((x) => x.classList.remove('selected')); b.classList.add('selected'); amountInput.value = b.dataset.amount; }));
     amountInput.addEventListener('input', () => amountBtns.forEach((x) => x.classList.remove('selected')));
     amountNext.addEventListener('click', () => {
-      const amt = Number(amountInput.value);
-      if (!Number.isFinite(amt) || amt <= 0) { amountInput.focus(); return; }
+      const amt = Math.round(Number(amountInput.value));
+      if (!Number.isFinite(amt) || amt < 1) { amountInput.focus(); return; }
       state.amount = amt;
-      document.getElementById('g-pay-card').hidden = state.method !== 'card';
-      document.getElementById('g-pay-zelle').hidden = state.method !== 'zelle';
-      document.getElementById('g-pay-title').textContent = state.method === 'zelle' ? `Send $${amt} via Zelle` : `Send $${amt} by card`;
+      document.getElementById('g-pay-amount').textContent = `$${amt} · card or Apple Pay`;
       goto('pay');
     });
 
-    /* Step 4 — pay */
-    const stripeLink = document.getElementById('stripe-pay-link');
-    if (stripeLink && stripeLink.dataset.placeholder === 'true') {
-      stripeLink.style.opacity = '0.55';
-      stripeLink.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('stripe-note').textContent = 'Card link coming soon — please use Zelle for now. Thank you!'; });
-    }
-    const zelleBtn = document.getElementById('zelle-number');
-    if (zelleBtn) zelleBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(zelleBtn.querySelector('.zelle__num').textContent.trim())
-        .then(() => { const h = document.getElementById('zelle-copied'); h.textContent = 'Copied!'; setTimeout(() => { h.textContent = 'Tap to copy'; }, 2000); }).catch(() => {});
-    });
-    const done = document.getElementById('g-done');
+    /* Step 3 — pay: create a Stripe Checkout session and hand off to Stripe */
+    const pay = document.getElementById('g-pay');
     const payErr = document.getElementById('g-pay-err');
-    done.addEventListener('click', async () => {
-      done.disabled = true; payErr.textContent = '';
+    pay.addEventListener('click', async () => {
+      pay.disabled = true; payErr.textContent = '';
       try {
-        await postRespond('gift', { name: state.name, method: state.method, amount: state.amount });
-        goto('thanks');
-      } catch (err) { payErr.textContent = err.message; done.disabled = false; }
+        const res = await fetch('/api/nqoot/checkout', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: state.name, amount: state.amount }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.url) throw new Error(data.error || 'Could not start checkout. Please try again.');
+        window.location.assign(data.url); // hosted Stripe checkout
+      } catch (err) { payErr.textContent = err.message; pay.disabled = false; }
     });
 
     /* Back buttons */
     panel.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => goto(b.dataset.back)));
+
+    // If Stripe just redirected back here after payment, confirm + say thanks.
+    handleNqootReturn(goto);
+  }
+
+  // On return from Stripe Checkout (?nqoot=paid&session_id=…) verify the payment
+  // server-side, record it once, and drop the guest on the nqoot thank-you card.
+  function handleNqootReturn(goto) {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('nqoot');
+    if (!status) return;
+    // Clean the query so a reload doesn't re-trigger this.
+    history.replaceState(null, '', window.location.pathname + '#nqoot');
+    if (status !== 'paid') return; // cancelled — leave them at the top of nqoot
+    const sessionId = params.get('session_id');
+    const land = () => {
+      if (lenis) lenis.scrollTo('#nqoot', { offset: -20, duration: 0.8 });
+      else document.getElementById('nqoot').scrollIntoView();
+    };
+    if (!sessionId) { goto('thanks'); land(); return; }
+    fetch('/api/nqoot/confirm?session_id=' + encodeURIComponent(sessionId))
+      .then((r) => r.json()).then((data) => {
+        if (data && data.ok && Number.isFinite(data.amount)) {
+          document.getElementById('g-thanks-sub').textContent =
+            `Your $${Math.round(data.amount)} gift means the world to us.`;
+        }
+        goto('thanks'); land();
+      }).catch(() => { goto('thanks'); land(); });
   }
 
   /* --------------------------------------------------------------- Boot ---- */
