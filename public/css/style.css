@@ -271,11 +271,39 @@ img { max-width: 100%; display: block; }
   clip-path: polygon(0 0, 50% var(--flap-h), 100% 0, 100% 100%, 0 100%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
 }
-.envelope__front::after {
-  content: ""; position: absolute; inset: 0;
-  background:
-    linear-gradient(to bottom right, transparent 49.7%, rgba(44,39,28,0.05) 50%, transparent 50.3%),
-    linear-gradient(to bottom left, transparent 49.7%, rgba(44,39,28,0.05) 50%, transparent 50.3%);
+/* The three glued flaps that make up the envelope's face. Together they tile
+   the front exactly: L(0,0 · apex · 0,100) + R(100,0 · apex · 100,100) +
+   B(0,100 · apex · 100,100), where apex = (50%, --flap-h). Each is shaded from
+   a different direction, so the seams read as folded paper rather than lines. */
+.envelope__seam {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background-image: var(--card-tex), linear-gradient(#F6F1E6, #ECE4D3);
+  background-blend-mode: soft-light; background-size: 90px, cover;
+}
+.envelope__seam--l {
+  clip-path: polygon(0 0, 50% var(--flap-h), 0 100%);
+  background-image: var(--card-tex), linear-gradient(76deg, #F1EADC 0%, #F6F1E7 70%);
+}
+.envelope__seam--r {
+  clip-path: polygon(100% 0, 50% var(--flap-h), 100% 100%);
+  background-image: var(--card-tex), linear-gradient(-76deg, #EFE8D9 0%, #F5F0E5 70%);
+}
+/* The bottom flap is glued on last, so it sits over the side flaps and casts a
+   real shadow along its two diagonal edges. drop-shadow follows the clip-path;
+   box-shadow would be clipped away with it. */
+.envelope__seam--b {
+  z-index: 5;
+  clip-path: polygon(0 100%, 50% var(--flap-h), 100% 100%);
+  background-image: var(--card-tex), linear-gradient(0deg, #F2EBDC 0%, #F9F5EB 78%);
+  filter: drop-shadow(0 -2px 2.5px rgba(44,39,28,0.30));
+}
+/* A sliver of shadow cast by the closed top flap onto the face below it. */
+.envelope__flap-shade {
+  position: absolute; top: 0; left: 0; width: 100%; height: var(--flap-h);
+  z-index: 5; pointer-events: none;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: linear-gradient(180deg, transparent 62%, rgba(44,39,28,0.30));
+  transform: translateY(3px);
 }
 .envelope__flap {
   position: absolute; top: 0; left: 0; width: 100%; height: var(--flap-h); z-index: 6;
@@ -331,6 +359,30 @@ img { max-width: 100%; display: block; }
   pointer-events: none;
 }
 .envelope__seal .crest { position: relative; z-index: 2; line-height: 0; }
+
+/* Floral relief embossed into the cardstock. Same sculpted-flower art as the
+   page corners, but blended soft-light so its highlights and shadows press into
+   the envelope's own cream instead of sitting on top as white flowers. */
+.env-bloom, .flap-bloom {
+  position: absolute; line-height: 0; pointer-events: none;
+  /* multiply, not soft-light/overlay: against a base this light both compress
+     toward white (overlay gives barely a 14% swing). Multiply prints the
+     flowers' own shading into the cream, so the relief actually reads. */
+  mix-blend-mode: multiply; opacity: 0.34;
+}
+.env-bloom img, .flap-bloom img { width: 100%; height: auto; display: block; }
+
+/* Bottom two corners live on the envelope face and never move. */
+.env-bloom { width: 34%; z-index: 5; }
+.env-bloom--bl { bottom: -1%; left: -1%; transform: scaleY(-1); }
+.env-bloom--br { bottom: -1%; right: -1%; transform: scale(-1, -1); }
+
+/* Top two are children of the flap, so they lift with it. The flap's ::after
+   liner paints over them once it turns, which hides them exactly when the
+   flap's outer face should no longer be visible. */
+.flap-bloom { width: 42%; }
+.flap-bloom--l { top: -2%; left: -2%; }
+.flap-bloom--r { top: -2%; right: -2%; transform: scaleX(-1); }
 
 /* On phones the envelope stands upright and fills the screen, like a real
    invitation held in the hand. Shallower flap to suit the portrait shape.
@@ -407,6 +459,7 @@ img { max-width: 100%; display: block; }
 
 .hero__hint {
   position: absolute; bottom: clamp(1.6rem, 5vh, 3rem); left: 50%; transform: translateX(-50%);
+  z-index: 9; /* above .envelope-scene (4), which now carries a z-index */
   display: inline-flex; flex-direction: column; align-items: center; gap: 0.55rem;
   background: none; border: none; cursor: pointer;
   font-family: var(--sans); font-size: 0.64rem; letter-spacing: 0.32em; text-transform: uppercase; color: var(--taupe);

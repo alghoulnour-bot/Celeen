@@ -152,6 +152,7 @@
 
     if (prefersReduced) {
       gsap.set(scene, { autoAlpha: 0 });
+      gsap.set('#envelope-flap-shade', { autoAlpha: 0 });
       gsap.set(heroScene, { autoAlpha: 1 });
       gsap.set(heroTitle, { autoAlpha: 1, y: 0 });
       gsap.set('.vines', { autoAlpha: 1 });
@@ -171,6 +172,8 @@
       // Same ease + duration on both, so the seal tracks the apex every frame.
       .to(flap, { scaleY: -1, duration: 1.9, ease: 'power2.inOut' }, 0.2)
       .to(seal, { y: flapTravel, duration: 1.9, ease: 'power2.inOut' }, 0.2)
+      // The shadow the closed flap casts on the face has nothing to cast it.
+      .to('#envelope-flap-shade', { autoAlpha: 0, duration: 0.5, ease: 'power1.in' }, 0.2)
       .to(scene, { y: sceneShift, duration: 1.9, ease: 'power2.inOut' }, 0.2)
       // Bloom to white halfway through the lift (the flap runs 0.2→2.1), while
       // pushing gently INTO the envelope — it reads as going inside rather than
