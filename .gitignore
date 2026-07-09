@@ -1,3 +1,6 @@
 node_modules/
 .env
 data/
+
+# Licensed music: kept local, uploaded straight to the host — not republished here.
+public/assets/music.mp3
