@@ -83,7 +83,11 @@
 
       <!-- Revealed behind the white bloom once the envelope has opened -->
       <div class="hero-scene" id="hero-scene">
-        <img class="hero-scene__img" src="assets/ballroom.jpg" alt="" />
+        <picture class="hero-scene__pic">
+          <!-- Landscape ballroom on desktop; the portrait crop suits phones. -->
+          <source media="(min-width: 900px)" srcset="assets/ballroom-desktop.jpg" />
+          <img class="hero-scene__img" src="assets/ballroom.jpg" alt="" />
+        </picture>
         <div class="hero-scene__veil" aria-hidden="true"></div>
         <div class="hero-scene__title" id="hero-scene-title">
           <span class="hero-scene__eyebrow">The Wedding of</span>

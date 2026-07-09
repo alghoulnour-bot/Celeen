@@ -218,7 +218,11 @@ img { max-width: 100%; display: block; }
 }
 /* ---- The scene the envelope opens into ------------------------------------ */
 .hero-scene { position: absolute; inset: 0; z-index: 1; opacity: 0; overflow: hidden; }
+/* <picture> is inline by default; it has to fill the scene for height:100% to mean anything */
+.hero-scene__pic { display: block; width: 100%; height: 100%; }
 .hero-scene__img { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; }
+/* The desktop art is landscape, so cover crops the sides, not the top — centre it. */
+@media (min-width: 900px) { .hero-scene__img { object-position: center center; } }
 /* Scrim so the overlaid names stay legible against the bright chandeliers —
    darkest right behind the title, softer at the edges. */
 .hero-scene__veil {
