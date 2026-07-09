@@ -261,6 +261,54 @@
     const t = setInterval(tick, 1000);
   }
 
+  /* --------------------------------------------- Save-the-date calendar ---- */
+  // July 2026 laid out Sun→Sat. Hard-coded rather than derived from Date so the
+  // grid can never shift with the viewer's timezone.
+  function buildCalendar() {
+    const grid = document.getElementById('cal-grid');
+    if (!grid) return;
+    const DOW = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const FIRST_DOW = 3;  // July 1, 2026 falls on a Wednesday
+    const DAYS = 31;
+    const WEDDING = 26;
+
+    let html = DOW.map((d) => `<span class="cal__dow">${d}</span>`).join('');
+    for (let i = 0; i < FIRST_DOW; i++) html += '<span class="cal__day cal__day--empty"></span>';
+    for (let d = 1; d <= DAYS; d++) {
+      html += d === WEDDING
+        ? `<span class="cal__day cal__day--wed" aria-label="July 26, 2026 — our wedding day">${d}</span>`
+        : `<span class="cal__day">${d}</span>`;
+    }
+    grid.innerHTML = html;
+  }
+
+  /* ----------------------------------------------------- Background music -- */
+  // Never autoplays (browsers block it anyway). The button only appears if a
+  // track actually exists at assets/music.mp3.
+  function buildMusic() {
+    const audio = document.getElementById('music');
+    const btn = document.getElementById('music-toggle');
+    if (!audio || !btn) return;
+
+    fetch(audio.getAttribute('src'), { method: 'HEAD' })
+      .then((res) => { if (res.ok) btn.hidden = false; })
+      .catch(() => {});
+
+    btn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.volume = 0.35;
+        audio.play().then(() => {
+          btn.setAttribute('aria-pressed', 'true');
+          btn.setAttribute('aria-label', 'Pause music');
+        }).catch(() => {});
+      } else {
+        audio.pause();
+        btn.setAttribute('aria-pressed', 'false');
+        btn.setAttribute('aria-label', 'Play music');
+      }
+    });
+  }
+
   /* ------------------------------------------------ Questionnaire helpers -- */
   // Guest list is fetched once and shared by both flows' autocompletes.
   let guestNamesCache = null;
@@ -517,6 +565,8 @@
       document.querySelectorAll('.photo-wipe').forEach((el) => { el.style.clipPath = 'inset(0 0 0% 0)'; });
     }
     buildCountdown();
+    buildCalendar();
+    buildMusic();
     buildRsvp();
     buildNqoot();
     buildAdminDot();

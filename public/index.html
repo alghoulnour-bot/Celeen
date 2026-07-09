@@ -32,6 +32,14 @@
   <div class="paper-surface" aria-hidden="true"></div>
   <div class="ambient" aria-hidden="true"></div>
 
+  <!-- Background music. Never autoplays; the button only appears if the file
+       exists (drop your track at assets/music.mp3). -->
+  <audio id="music" src="assets/music.mp3" loop preload="none"></audio>
+  <button class="music" id="music-toggle" type="button" aria-pressed="false" aria-label="Play music" hidden>
+    <svg class="music__on" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a9 9 0 0 1 0 12"/></svg>
+    <svg class="music__off" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m17 9 4 6M21 9l-4 6"/></svg>
+  </button>
+
   <!-- Botanical corner vines (muted, decorative) -->
   <div class="vines" aria-hidden="true">
     <span class="vine vine--tl" data-vine></span>
@@ -86,20 +94,35 @@
     </div>
   </section>
 
-  <!-- ============================ COUNTDOWN (green band) ============================ -->
-  <section id="countdown" class="section section--green">
-    <div class="wrap center">
-      <span class="crest crest--light reveal" data-crest></span>
-      <h2 class="count__en reveal">Counting Down to Our Forever</h2>
+  <!-- ============================ FORMAL INVITATION ============================ -->
+  <section id="invitation" class="section">
+    <div class="wrap wrap--narrow center">
+      <div class="paper-panel invite reveal">
+        <span class="crest" data-crest></span>
+        <p class="invite__eyebrow">Together with their families</p>
+        <!-- TODO: replace the two bracketed lines with the real parents' names -->
+        <p class="invite__families">
+          Mr. &amp; Mrs. [Omar's Parents]
+          <span class="invite__amp">and</span>
+          Mr. &amp; Mrs. [Celeen's Parents]
+        </p>
+        <p class="invite__lead">request the honour of your presence at the marriage of</p>
+        <h2 class="invite__names">Omar &amp; Celeen</h2>
+        <span class="invite__rule" aria-hidden="true"></span>
+        <p class="invite__when">Sunday, the twenty-sixth of July<br />two thousand and twenty-six, at seven in the evening</p>
+        <p class="invite__where">Marriott Las Colinas &middot; The Ballroom<br />Irving, Texas</p>
+      </div>
+    </div>
+  </section>
 
-      <div class="count reveal" id="count" role="timer" aria-live="off">
-        <div class="count__unit"><span class="count__num" id="cd-days">00</span><span class="count__label">Days</span></div>
-        <div class="count__sep">&middot;</div>
-        <div class="count__unit"><span class="count__num" id="cd-hours">00</span><span class="count__label">Hours</span></div>
-        <div class="count__sep">&middot;</div>
-        <div class="count__unit"><span class="count__num" id="cd-mins">00</span><span class="count__label">Minutes</span></div>
-        <div class="count__sep">&middot;</div>
-        <div class="count__unit"><span class="count__num" id="cd-secs">00</span><span class="count__label">Seconds</span></div>
+  <!-- ============================ SAVE THE DATE (calendar) ============================ -->
+  <section id="save-the-date" class="section section--cream">
+    <div class="wrap wrap--narrow center">
+      <h2 class="section__title blurin">Save the Date</h2>
+      <div class="paper-panel cal reveal">
+        <p class="cal__month">July 2026</p>
+        <div class="cal__grid" id="cal-grid"></div>
+        <p class="cal__note">We can't wait to celebrate with you.</p>
       </div>
     </div>
   </section>
@@ -123,13 +146,11 @@
           <span class="detail__k">The Day</span>
           <p class="detail__big">July 26, 2026</p>
           <p class="detail__sm">Sunday</p>
-          <span class="detail__ar" lang="ar" dir="rtl">الأحد ٢٦ يوليو</span>
         </article>
         <article class="paper-panel paper-panel--card reveal">
           <span class="detail__k">The Hour</span>
           <p class="detail__big">7:00 PM</p>
           <p class="detail__sm">Evening</p>
-          <span class="detail__ar" lang="ar" dir="rtl">السابعة مساءً</span>
         </article>
         <article class="paper-panel paper-panel--card reveal">
           <span class="detail__k">The Place</span>
@@ -140,6 +161,81 @@
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 17L17 7M17 7H9M17 7v8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
         </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ VENUE (live map) ============================ -->
+  <section id="venue" class="section">
+    <div class="wrap center">
+      <h2 class="section__title blurin">The Venue</h2>
+      <div class="venue reveal">
+        <div class="venue__map">
+          <iframe
+            title="Map to Marriott Las Colinas, Irving, Texas"
+            src="https://www.google.com/maps?q=Dallas%20Marriott%20Las%20Colinas%2C%20223%20W%20Las%20Colinas%20Blvd%2C%20Irving%2C%20TX%2075039&output=embed"
+            loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <div class="paper-panel venue__card">
+          <span class="venue__k">The Venue</span>
+          <p class="venue__name">Marriott Las Colinas</p>
+          <p class="venue__room">The Ballroom</p>
+          <p class="venue__addr">223 W Las Colinas Blvd<br />Irving, Texas 75039</p>
+          <p class="venue__when">July 26, 2026 &middot; 7:00 PM</p>
+          <a class="venue__link mag" href="https://maps.google.com/?q=Dallas+Las+Colinas+Marriott,+223+W+Las+Colinas+Blvd,+Irving,+TX+75039" target="_blank" rel="noopener">
+            Open in Maps
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 17L17 7M17 7H9M17 7v8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ GALLERY ============================ -->
+  <section id="gallery" class="section section--cream">
+    <div class="wrap center">
+      <h2 class="section__title blurin">Before the Big Day</h2>
+      <p class="section__sub">A few of our favourite moments.</p>
+      <div class="gallery reveal">
+        <figure class="gallery__item"><img src="assets/couple-1.jpg" alt="Omar and Celeen" loading="lazy" /></figure>
+        <figure class="gallery__item"><img src="assets/couple-3.jpg" alt="Omar and Celeen" loading="lazy" /></figure>
+        <figure class="gallery__item"><img src="assets/couple-2.jpg" alt="Omar and Celeen" loading="lazy" /></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ COUNTDOWN (gold band) ============================ -->
+  <section id="countdown" class="section section--green">
+    <div class="wrap center">
+      <span class="crest crest--light reveal" data-crest></span>
+      <h2 class="count__en reveal">Counting Down to Our Forever</h2>
+
+      <div class="count reveal" id="count" role="timer" aria-live="off">
+        <div class="count__unit"><span class="count__num" id="cd-days">00</span><span class="count__label">Days</span></div>
+        <div class="count__sep">&middot;</div>
+        <div class="count__unit"><span class="count__num" id="cd-hours">00</span><span class="count__label">Hours</span></div>
+        <div class="count__sep">&middot;</div>
+        <div class="count__unit"><span class="count__num" id="cd-mins">00</span><span class="count__label">Minutes</span></div>
+        <div class="count__sep">&middot;</div>
+        <div class="count__unit"><span class="count__num" id="cd-secs">00</span><span class="count__label">Seconds</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ DRESS CODE ============================ -->
+  <section id="dress" class="section">
+    <div class="wrap wrap--narrow center">
+      <h2 class="section__script blurin">Dress Code</h2>
+      <div class="paper-panel dress reveal">
+        <p class="dress__lead">To match the evening we're dreaming of</p>
+        <p class="dress__body">We warmly invite you to wear elegant attire in soft, natural tones — champagne, beige, taupe, moka and cream.</p>
+        <ul class="dress__swatches">
+          <li class="dress__swatch"><span class="swatch" style="--c:#D8C79A"></span><span class="swatch__name">Champagne</span></li>
+          <li class="dress__swatch"><span class="swatch" style="--c:#E3D8BE"></span><span class="swatch__name">Beige</span></li>
+          <li class="dress__swatch"><span class="swatch" style="--c:#B3A184"></span><span class="swatch__name">Taupe</span></li>
+          <li class="dress__swatch"><span class="swatch" style="--c:#8A7550"></span><span class="swatch__name">Moka</span></li>
+          <li class="dress__swatch"><span class="swatch" style="--c:#F3EDDD"></span><span class="swatch__name">Cream</span></li>
+        </ul>
       </div>
     </div>
   </section>
@@ -243,6 +339,28 @@
           <p class="q__sub" id="g-thanks-sub">Your generosity means the world to us.</p>
         </div>
 
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ CLOSING + NOTES ============================ -->
+  <section id="closing" class="section section--cream">
+    <div class="wrap wrap--narrow center">
+      <div class="paper-panel closing reveal">
+        <span class="crest" data-crest></span>
+        <h2 class="closing__names">Omar &amp; Celeen</h2>
+        <p class="closing__date">Sunday &middot; July 26 &middot; 2026</p>
+        <p class="closing__msg">With hearts full of love and gratitude, we can't wait to share this evening with you.</p>
+
+        <span class="closing__rule" aria-hidden="true"></span>
+
+        <p class="notes__k">Please note</p>
+        <!-- TODO: replace these with the couple's real notes -->
+        <ul class="notes">
+          <li>[e.g. Kindly note this is an adults-only celebration.]</li>
+          <li>[e.g. Doors open at 6:30 PM; we'll begin promptly at 7:00.]</li>
+          <li>[e.g. Complimentary valet parking is available at the main entrance.]</li>
+        </ul>
       </div>
     </div>
   </section>
