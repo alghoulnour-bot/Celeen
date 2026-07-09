@@ -47,24 +47,25 @@ img { max-width: 100%; display: block; }
 .svg-defs { position: absolute; }
 
 /* ---- Overlays -------------------------------------------------------------- */
-.grain {
-  position: fixed; inset: 0; z-index: 60; pointer-events: none;
-  opacity: 0.16; mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+/* (The old procedural .grain layer is gone — the parchment scan below already
+   carries fine grain, and a third full-viewport blend layer cost real frames.) */
 /* The whole page reads as one continuous sheet of paper. A real parchment scan,
-   reduced to neutral grey and high-passed so it carries none of its own tint or
-   vignette — soft-light then lends the texture while the site keeps its colour.
-   One sheet stretched over the fixed viewport: no tiling, so no repeat seams
-   and no mirror symmetry. */
+   high-passed to strip its own tint and vignette, then remapped high-key and
+   laid over everything with MULTIPLY — soft-light was invisible on the cream
+   (it barely moves near-white bases) while hammering the dark gold band.
+   Multiply darkens proportionally, so the grain reads the same everywhere.
+   One un-mirrored sheet over the fixed viewport: no seams, no symmetry.
+   translateZ promotes it to its own layer so scrolling doesn't repaint it. */
 .paper-surface {
   position: fixed; inset: 0; z-index: 56; pointer-events: none;
   background-image: url("../assets/paper-texture.jpg");
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-  mix-blend-mode: soft-light;
-  opacity: 0.85;
+  mix-blend-mode: multiply;
+  opacity: 0.55; /* enough to read as paper everywhere, not enough to look grimy */
+  transform: translateZ(0);
+  will-change: opacity;
 }
 /* Warm aged wash + heavy vignette — filmic, old-print depth */
 .ambient {
@@ -79,15 +80,17 @@ img { max-width: 100%; display: block; }
   background: linear-gradient(160deg, rgba(120,92,44,0.10), rgba(74,60,34,0.12));
   mix-blend-mode: multiply;
 }
-/* Botanical corner vines — muted, decorative, framing the edges */
-.vines { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+/* Floral corners — muted, decorative, framing the edges. Hidden until the
+   envelope has opened onto the ballroom (JS fades them in); the inline start
+   value keeps them from flashing before the script runs. */
+.vines { position: fixed; inset: 0; z-index: 3; pointer-events: none; opacity: 0; }
 .vine { position: absolute; width: clamp(110px, 15vw, 210px); line-height: 0; }
 .vine--tl { top: 0; left: 0; }
 .vine--tr { top: 0; right: 0; transform: scaleX(-1); }
 .vine--bl { bottom: 0; left: 0; transform: scaleY(-1); }
 .vine--br { bottom: 0; right: 0; transform: scale(-1, -1); }
 .vine__img { width: 100%; height: auto; display: block; }
-@media (max-width: 600px) { .vine { width: 128px; } .vines { opacity: 0.95; } }
+@media (max-width: 600px) { .vine { width: 128px; } }
 
 .scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 55; pointer-events: none; }
 .scroll-progress span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, transparent, var(--gold)); }
@@ -311,8 +314,8 @@ img { max-width: 100%; display: block; }
   .envelope {
     --flap-h: 35%;
     --seal-r: 44px;
-    width: min(96vw, 480px);
-    height: min(196vw, 96dvh); /* the raised flap is free to run off the top */
+    width: min(99vw, 520px);
+    height: min(212vw, 98dvh); /* the raised flap is free to run off the top */
   }
 }
 
@@ -361,7 +364,6 @@ img { max-width: 100%; display: block; }
 .hero-cta--ghost {
   background: rgba(255,255,255,0.10); color: #FBF6EA;
   border: 1px solid rgba(251,246,234,0.65);
-  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
   box-shadow: none;
 }
 .hero-cta--ghost:hover { background: rgba(255,255,255,0.2); color: #FFF; border-color: #FBF6EA; }
@@ -591,7 +593,7 @@ input:focus { outline: none; border-color: var(--gold); background: var(--paper)
 .music {
   position: fixed; bottom: clamp(1.2rem, 3vw, 2rem); right: clamp(1rem, 2.5vw, 1.8rem); z-index: 70;
   width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
-  background: rgba(243,236,220,0.82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  background: rgba(246,240,226,0.95);
   border: 1px solid var(--line-soft); color: var(--green-deep);
   box-shadow: 0 10px 20px -12px rgba(44,39,28,0.5);
   transition: background .3s var(--ease), color .3s var(--ease);
@@ -649,7 +651,7 @@ input:focus { border-color: var(--gold); box-shadow: inset 0 1px 3px rgba(44,39,
 .likes__btn {
   position: relative; width: 46px; height: 46px; border-radius: 50%; cursor: pointer;
   display: grid; place-items: center; color: #B4544F;
-  background: rgba(243,236,220,0.82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  background: rgba(246,240,226,0.95);
   border: 1px solid var(--line-soft);
   box-shadow: 0 10px 20px -12px rgba(44,39,28,0.5);
   transition: transform 0.22s var(--ease), background 0.3s var(--ease);
@@ -663,7 +665,7 @@ input:focus { border-color: var(--gold); box-shadow: inset 0 1px 3px rgba(44,39,
 .likes__count {
   font-family: var(--sans); font-size: 0.74rem; letter-spacing: 0.06em;
   color: var(--ink-soft); font-variant-numeric: tabular-nums;
-  background: rgba(243,236,220,0.82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  background: rgba(246,240,226,0.95);
   border: 1px solid var(--line-soft); border-radius: 999px; padding: 0.34rem 0.7rem;
   box-shadow: 0 10px 20px -14px rgba(44,39,28,0.5);
   order: 2; /* count sits to the right of the heart */

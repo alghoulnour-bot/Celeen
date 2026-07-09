@@ -105,6 +105,7 @@
     if (cta) gsap.set(cta, { xPercent: -50, autoAlpha: 0, y: 12 });
     gsap.set(heroScene, { autoAlpha: 0 });
     gsap.set(heroTitle, { autoAlpha: 0, y: 18 });
+    gsap.set('.vines', { autoAlpha: 0 }); // corner flowers arrive with the ballroom
 
     const hint = document.getElementById('hero-hint');
     const skip = document.getElementById('hero-skip');
@@ -153,6 +154,7 @@
       gsap.set(scene, { autoAlpha: 0 });
       gsap.set(heroScene, { autoAlpha: 1 });
       gsap.set(heroTitle, { autoAlpha: 1, y: 0 });
+      gsap.set('.vines', { autoAlpha: 1 });
       if (cta) gsap.set(cta, { xPercent: -50, autoAlpha: 1, y: 0 });
       if (hint) gsap.set(hint, { autoAlpha: 0 });
       unlockScroll();
@@ -179,6 +181,8 @@
       // Slow drift on the photo itself (not the container — it holds the title).
       .to('.hero-scene__img', { scale: 1.06, duration: 3.4, ease: 'power1.out' }, 2.65)
       .to(heroTitle, { autoAlpha: 1, y: 0, duration: 1.0, ease: 'power2.out' }, 2.95)
+      // The floral corners settle in once the ballroom is showing.
+      .to('.vines', { autoAlpha: 1, duration: 1.2, ease: 'power2.out' }, 3.0)
       .to(cta, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' }, 3.45)
       // Hand the page back as soon as the scene has settled — the slow drift on
       // the photo keeps running past this and must not hold the scroll lock.
