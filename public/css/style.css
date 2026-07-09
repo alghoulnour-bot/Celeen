@@ -23,6 +23,9 @@
 
   /* Fibrous paper texture, layered onto paper surfaces via background-blend */
   --paper-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.55'/%3E%3C/svg%3E");
+  /* Smooth cardstock — a much finer, fainter tooth than the fibrous paper.
+     Used on the envelope so it reads as a pressed card, not papyrus. */
+  --card-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.22'/%3E%3C/svg%3E");
 
   --serif:  'Cormorant Garamond', Georgia, serif;
   --script: 'Pinyon Script', 'Cormorant Garamond', cursive;
@@ -69,21 +72,22 @@ img { max-width: 100%; display: block; }
 }
 /* Warm aged wash + heavy vignette — filmic, old-print depth */
 .ambient {
-  position: fixed; inset: 0; z-index: 58; pointer-events: none;
+  position: fixed; inset: 0; z-index: 59; pointer-events: none;
   background:
     radial-gradient(60% 45% at 15% 8%, rgba(173,149,96,0.10), transparent 70%),
     radial-gradient(130% 110% at 50% 42%, transparent 46%, rgba(46,34,18,0.22) 100%);
 }
-/* Warm sepia grade over the whole page */
+/* Warm sepia grade. A plain translucent wash, not a second full-viewport
+   mix-blend-mode layer — those force the compositor to re-blend the entire
+   screen on every scroll frame, and lenis makes every frame a scroll frame. */
 .ambient::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(160deg, rgba(120,92,44,0.10), rgba(74,60,34,0.12));
-  mix-blend-mode: multiply;
+  background: linear-gradient(160deg, rgba(112,86,40,0.09), rgba(70,56,32,0.11));
 }
 /* Floral corners — muted, decorative, framing the edges. Hidden until the
    envelope has opened onto the ballroom (JS fades them in); the inline start
    value keeps them from flashing before the script runs. */
-.vines { position: fixed; inset: 0; z-index: 3; pointer-events: none; opacity: 0; }
+.vines { position: fixed; inset: 0; z-index: 58; pointer-events: none; opacity: 0; }
 .vine { position: absolute; width: clamp(110px, 15vw, 210px); line-height: 0; }
 .vine--tl { top: 0; left: 0; }
 .vine--tr { top: 0; right: 0; transform: scaleX(-1); }
@@ -122,9 +126,12 @@ img { max-width: 100%; display: block; }
   letter-spacing: 0.36em; text-transform: uppercase; color: var(--gold-deep); margin-bottom: 1rem;
 }
 .eyebrow [lang="ar"] { font-family: var(--ar); letter-spacing: 0; font-size: 1rem; }
+/* Every section header shares the script face (this used to be .section__script,
+   which only Dress Code wore). Pinyon has a small x-height, so it needs a larger
+   size and looser leading than the serif it replaced. */
 .section__title {
-  font-family: var(--serif); font-weight: 500; font-size: clamp(2.4rem, 5.2vw, 3.7rem);
-  line-height: 1.05; letter-spacing: -0.01em; color: var(--green);
+  font-family: var(--script); font-weight: 400; font-size: clamp(2.6rem, 8vw, 4rem);
+  line-height: 1.12; letter-spacing: 0; color: var(--green);
 }
 .section__title-ar { display: block; font-family: var(--ar); font-size: clamp(1.2rem, 2.6vw, 1.6rem); color: var(--taupe); margin-top: 0.6rem; }
 
@@ -169,12 +176,16 @@ img { max-width: 100%; display: block; }
 .paper-panel .crest { margin-bottom: 1.4rem; }
 
 /* ============================ HERO ==================================== */
-.hero { position: relative; background: var(--bone); }
+/* Above .paper-surface (56) so the parchment scan never lands on the envelope —
+   that overlay was what made the cardstock read as papyrus. isolation keeps the
+   hero's own layers (scene 1, envelope 4, ctas 5, hint 9, flash 20) stacking
+   internally. .vines (58) and .ambient (59) still sit over the top. */
+.hero { position: relative; z-index: 57; isolation: isolate; background: var(--bone); }
 .hero__pin {
   position: relative; height: 100dvh; width: 100%; overflow: hidden;
 }
 .envelope-scene {
-  position: absolute; left: 50%; top: 50%;
+  position: absolute; left: 50%; top: 50%; z-index: 4;
   transform: translate(-50%, -50%); /* centered from first paint, before JS runs */
   perspective: 3400px; perspective-origin: 50% 42%;
   will-change: transform;
@@ -206,7 +217,7 @@ img { max-width: 100%; display: block; }
 }
 /* ---- The scene the envelope opens into ------------------------------------ */
 .hero-scene { position: absolute; inset: 0; z-index: 1; opacity: 0; overflow: hidden; }
-.hero-scene__img { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; filter: sepia(0.10) saturate(0.92) contrast(0.98); }
+.hero-scene__img { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; }
 /* Scrim so the overlaid names stay legible against the bright chandeliers —
    darkest right behind the title, softer at the edges. */
 .hero-scene__veil {
@@ -233,8 +244,8 @@ img { max-width: 100%; display: block; }
    shadow so that once the flap opens you're clearly looking *inside*. */
 .envelope__back {
   position: absolute; inset: 0; z-index: 1;
-  background: var(--paper-tex), linear-gradient(180deg, #9A7C3B, #5A4418);
-  background-blend-mode: soft-light; background-size: 150px, cover;
+  background: var(--card-tex), linear-gradient(180deg, #9A7C3B, #5A4418);
+  background-blend-mode: soft-light; background-size: 90px, cover;
   border-radius: 6px;
   box-shadow: 0 36px 70px -34px rgba(44,39,28,0.5), inset 0 30px 40px -20px rgba(0,0,0,0.45);
 }
@@ -245,8 +256,8 @@ img { max-width: 100%; display: block; }
   /* Sunk into the envelope: its top edge sits below the opening so the gold
      liner still frames it, rather than the whole V turning white. */
   position: absolute; left: 9%; right: 9%; top: 15%; bottom: 6%; z-index: 2;
-  background: var(--paper-tex), linear-gradient(180deg, #FBF7EC, #F1EADB);
-  background-blend-mode: soft-light; background-size: 150px, cover;
+  background: var(--card-tex), linear-gradient(180deg, #FFFDF8, #F7F2E7);
+  background-blend-mode: soft-light; background-size: 90px, cover;
   border-radius: 1px;
   box-shadow:
     0 -6px 14px -6px rgba(28,20,6,0.55),        /* the liner casts down onto it */
@@ -254,8 +265,8 @@ img { max-width: 100%; display: block; }
 }
 .envelope__front {
   position: absolute; inset: 0; z-index: 3;
-  background: var(--paper-tex), linear-gradient(158deg, #E5D9BD, #D4C59F);
-  background-blend-mode: soft-light; background-size: 150px, cover;
+  background: var(--card-tex), linear-gradient(158deg, #F8F3E9, #ECE4D3);
+  background-blend-mode: soft-light; background-size: 90px, cover;
   border-radius: 6px;
   clip-path: polygon(0 0, 50% var(--flap-h), 100% 0, 100% 100%, 0 100%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
@@ -268,8 +279,8 @@ img { max-width: 100%; display: block; }
 }
 .envelope__flap {
   position: absolute; top: 0; left: 0; width: 100%; height: var(--flap-h); z-index: 6;
-  background: var(--paper-tex), linear-gradient(158deg, #E3D7BB, #D1C19C);
-  background-blend-mode: soft-light; background-size: 150px, cover;
+  background: var(--card-tex), linear-gradient(158deg, #F6F1E6, #E9E1CF);
+  background-blend-mode: soft-light; background-size: 90px, cover;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform-origin: 50% 0%; transform: rotateX(0deg);
   backface-visibility: hidden; box-shadow: 0 6px 14px -6px rgba(44,39,28,0.4);
@@ -279,8 +290,8 @@ img { max-width: 100%; display: block; }
    reads clearly against the cream page when it stands open. */
 .envelope__flap::after {
   content: ""; position: absolute; inset: 0;
-  background: var(--paper-tex), linear-gradient(158deg, #A0813F, #5E471A);
-  background-blend-mode: soft-light; background-size: 150px, cover;
+  background: var(--card-tex), linear-gradient(158deg, #A0813F, #5E471A);
+  background-blend-mode: soft-light; background-size: 90px, cover;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform: rotateX(180deg); backface-visibility: hidden;
 }
@@ -362,7 +373,6 @@ img { max-width: 100%; display: block; }
   box-shadow: inset -1.5px -1.5px 2px rgba(44,39,28,0.10), inset 1.5px 1.5px 2px rgba(255,255,255,0.65);
   pointer-events: none; z-index: 3;
 }
-.frame img { filter: sepia(0.16) saturate(0.92) contrast(0.97) brightness(1.03); }
 
 /* Shortcut buttons that appear once the hero has opened */
 .hero-ctas {
@@ -406,7 +416,7 @@ img { max-width: 100%; display: block; }
 
 /* ============================ COUNTDOWN ==================================== */
 .section--green { background: var(--green-deep); color: var(--bone); }
-.section--green .count__en { font-family: var(--serif); font-weight: 500; font-size: clamp(2.2rem, 6vw, 3.7rem); color: var(--gold-lt); line-height: 1.12; letter-spacing: 0.005em; }
+.section--green .count__en { font-family: var(--script); font-weight: 400; font-size: clamp(2.6rem, 8vw, 4.2rem); color: var(--gold-lt); line-height: 1.14; letter-spacing: 0; }
 .count { display: flex; align-items: flex-start; justify-content: center; gap: clamp(0.6rem, 2.6vw, 2rem); margin-top: 3rem; }
 .count__unit { display: flex; flex-direction: column; align-items: center; min-width: clamp(58px, 15vw, 92px); }
 .count__num { font-family: var(--serif); font-weight: 500; font-size: clamp(2.8rem, 8vw, 4.6rem); line-height: 1; color: var(--bone); font-variant-numeric: tabular-nums; }
@@ -559,7 +569,15 @@ input:focus { outline: none; border-color: var(--gold); background: var(--paper)
 
 /* ============================ VENUE / LIVE MAP ======================= */
 .venue { position: relative; margin-top: 3rem; }
-.venue__map { overflow: hidden; border-radius: 4px; box-shadow: 0 40px 70px -44px rgba(44,39,28,0.55); filter: saturate(0.7) contrast(0.96) sepia(0.12); }
+/* Tint the map with an overlay, NOT a CSS filter. A filter on a live iframe
+   forces Chrome to re-rasterize the whole map layer through it every frame. */
+.venue__map { position: relative; overflow: hidden; border-radius: 4px; box-shadow: 0 40px 70px -44px rgba(44,39,28,0.55); }
+.venue__map::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  /* A translucent cream wash mutes the map's colour toward the palette. Plain
+     alpha — no blend mode, no filter — so it costs nothing to composite. */
+  background: linear-gradient(rgba(230,219,193,0.44), rgba(214,199,166,0.48));
+}
 .venue__map iframe { display: block; width: 100%; height: clamp(360px, 52vh, 560px); border: 0; }
 .venue__card { text-align: center; max-width: 380px; margin: -90px auto 0; position: relative; z-index: 2; }
 .venue__k { font-family: var(--sans); font-size: 0.58rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold-deep); }
@@ -577,7 +595,7 @@ input:focus { outline: none; border-color: var(--gold); background: var(--paper)
 .gallery__item { background: var(--paper); padding: 10px 10px 38px; border: 1px solid var(--line-soft); box-shadow: 0 26px 44px -30px rgba(44,39,28,0.5); }
 /* Every source photo is portrait (~0.67 / 0.56), so the slots stay tall and the
    crop is biased upward — otherwise `cover` slices the tops of their heads. */
-.gallery__item img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; object-position: center 20%; filter: sepia(0.14) saturate(0.94) contrast(0.97); }
+.gallery__item img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; object-position: center 20%; }
 .gallery__item:nth-child(2) { margin-top: clamp(2rem, 6vw, 4.5rem); }
 .gallery__item:nth-child(2) img { object-position: center 13%; } /* couple-3 is the tallest → crops most */
 .gallery__item:nth-child(3) { grid-column: 1 / -1; max-width: 52%; margin: clamp(1rem, 3vw, 2rem) auto 0; }
@@ -585,7 +603,6 @@ input:focus { outline: none; border-color: var(--gold); background: var(--paper)
 @media (max-width: 600px) { .gallery__item:nth-child(3) { max-width: 82%; } }
 
 /* ============================ DRESS CODE ============================= */
-.section__script { font-family: var(--script); font-weight: 400; font-size: clamp(2.6rem, 8vw, 4rem); color: var(--gold-deep); text-align: center; line-height: 1.1; }
 .dress { text-align: center; margin-top: 2.4rem; }
 .dress__lead { font-family: var(--sans); font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold-deep); }
 .dress__body { font-family: var(--serif); font-style: italic; font-size: clamp(1rem, 2.3vw, 1.18rem); color: var(--ink); margin-top: 1.2rem; line-height: 1.9; max-width: 44ch; margin-inline: auto; }
