@@ -23,10 +23,6 @@
 
   /* Fibrous paper texture, layered onto paper surfaces via background-blend */
   --paper-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.55'/%3E%3C/svg%3E");
-  /* Soft cloudy mottling — the large-scale unevenness of a real sheet */
-  --paper-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
-  /* Fine directional fibres pressed into the sheet */
-  --paper-fibre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5 0.07' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)' opacity='0.28'/%3E%3C/svg%3E");
 
   --serif:  'Cormorant Garamond', Georgia, serif;
   --script: 'Pinyon Script', 'Cormorant Garamond', cursive;
@@ -56,15 +52,19 @@ img { max-width: 100%; display: block; }
   opacity: 0.16; mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-/* The whole page reads as one continuous sheet of paper: soft cloudy mottling
-   plus pressed fibres, laid over every section (including the gold ones) so
-   nothing is ever a flat, dead colour. */
+/* The whole page reads as one continuous sheet of paper. A real parchment scan,
+   reduced to neutral grey and high-passed so it carries none of its own tint or
+   vignette — soft-light then lends the texture while the site keeps its colour.
+   One sheet stretched over the fixed viewport: no tiling, so no repeat seams
+   and no mirror symmetry. */
 .paper-surface {
   position: fixed; inset: 0; z-index: 56; pointer-events: none;
-  background-image: var(--paper-mottle), var(--paper-fibre);
-  background-size: 700px 700px, 320px 320px;
+  background-image: url("../assets/paper-texture.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
   mix-blend-mode: soft-light;
-  opacity: 0.62;
+  opacity: 0.85;
 }
 /* Warm aged wash + heavy vignette — filmic, old-print depth */
 .ambient {
