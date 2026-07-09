@@ -23,6 +23,10 @@
 
   /* Fibrous paper texture, layered onto paper surfaces via background-blend */
   --paper-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.55'/%3E%3C/svg%3E");
+  /* Soft cloudy mottling — the large-scale unevenness of a real sheet */
+  --paper-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+  /* Fine directional fibres pressed into the sheet */
+  --paper-fibre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5 0.07' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)' opacity='0.28'/%3E%3C/svg%3E");
 
   --serif:  'Cormorant Garamond', Georgia, serif;
   --script: 'Pinyon Script', 'Cormorant Garamond', cursive;
@@ -51,6 +55,16 @@ img { max-width: 100%; display: block; }
   position: fixed; inset: 0; z-index: 60; pointer-events: none;
   opacity: 0.16; mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* The whole page reads as one continuous sheet of paper: soft cloudy mottling
+   plus pressed fibres, laid over every section (including the gold ones) so
+   nothing is ever a flat, dead colour. */
+.paper-surface {
+  position: fixed; inset: 0; z-index: 56; pointer-events: none;
+  background-image: var(--paper-mottle), var(--paper-fibre);
+  background-size: 700px 700px, 320px 320px;
+  mix-blend-mode: soft-light;
+  opacity: 0.62;
 }
 /* Warm aged wash + heavy vignette — filmic, old-print depth */
 .ambient {
@@ -127,8 +141,15 @@ img { max-width: 100%; display: block; }
 .crest__svg { width: 100px; height: auto; overflow: visible; }
 .crest__mono { font-family: var(--script); font-weight: 400; font-size: 94px; fill: var(--gold-deep); }
 .crest__mono--c { fill: var(--gold); } /* slight two-tone so the overlap reads */
-.crest--seal .crest__svg { width: 78px; }
-.crest--seal .crest__mono { fill: var(--gold-lt); }
+.crest--seal .crest__svg { width: calc(var(--seal-r, 38px) * 1.5); } /* scales with the seal */
+/* Struck into the wax: lit on top, shadow cast below → reads as raised relief */
+.crest--seal .crest__svg {
+  filter:
+    drop-shadow(0 1.4px 0.8px rgba(46,34,8,0.8))
+    drop-shadow(0 -0.6px 0.5px rgba(255,242,205,0.28));
+}
+.crest--seal .crest__mono { fill: #E7D19A; }
+.crest--seal .crest__mono--c { fill: #DCC488; }
 .crest--light .crest__mono { fill: var(--gold-lt); }
 .crest--light { margin-bottom: 1.4rem; }
 .crest--footer .crest__svg { width: 88px; }
@@ -163,7 +184,27 @@ img { max-width: 100%; display: block; }
   perspective: 3400px; perspective-origin: 50% 42%;
   will-change: transform;
 }
+/* The whole envelope is the tap target until it's opened */
+.envelope-scene.is-tappable { cursor: pointer; }
+.envelope-scene.is-tappable .envelope__seal { transition: transform 0.4s var(--ease); }
+.envelope-scene.is-tappable:hover .envelope__seal { transform: translateX(-50%) scale(1.05); }
+
+/* Discreet bail-out for guests who don't want the animation */
+.hero__skip {
+  position: absolute; right: clamp(1rem, 3vw, 2rem); bottom: clamp(1.2rem, 4vh, 2.2rem);
+  z-index: 9; background: none; border: 0; cursor: pointer;
+  font-family: var(--sans); font-size: 0.62rem; letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--ink-soft); opacity: 0.6; transition: opacity 0.3s var(--ease);
+}
+.hero__skip:hover { opacity: 1; }
+.hero__skip[hidden] { display: none; }
+/* While the invitation is still sealed the page can't be scrolled — you open it
+   by tapping the envelope (or press Skip). */
+.is-sealed, .is-sealed body { overflow: hidden; height: 100%; touch-action: none; }
+
 .envelope {
+  --flap-h: 66%; /* depth of the flap triangle; shallower on the tall mobile envelope */
+  --seal-r: 38px;
   position: relative; width: min(92vw, 640px); height: min(57vw, 420px);
   transform-style: preserve-3d;
 }
@@ -197,7 +238,7 @@ img { max-width: 100%; display: block; }
   background: var(--paper-tex), linear-gradient(158deg, #E5D9BD, #D4C59F);
   background-blend-mode: soft-light; background-size: 150px, cover;
   border-radius: 6px;
-  clip-path: polygon(0 0, 50% 66%, 100% 0, 100% 100%, 0 100%);
+  clip-path: polygon(0 0, 50% var(--flap-h), 100% 0, 100% 100%, 0 100%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
 }
 .envelope__front::after {
@@ -207,7 +248,7 @@ img { max-width: 100%; display: block; }
     linear-gradient(to bottom left, transparent 49.7%, rgba(44,39,28,0.05) 50%, transparent 50.3%);
 }
 .envelope__flap {
-  position: absolute; top: 0; left: 0; width: 100%; height: 66%; z-index: 6;
+  position: absolute; top: 0; left: 0; width: 100%; height: var(--flap-h); z-index: 6;
   background: var(--paper-tex), linear-gradient(158deg, #E3D7BB, #D1C19C);
   background-blend-mode: soft-light; background-size: 150px, cover;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
@@ -224,13 +265,55 @@ img { max-width: 100%; display: block; }
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform: rotateX(180deg); backface-visibility: hidden;
 }
+/* Poured wax: an irregular blob, a rim raised where the stamp squeezed the wax
+   out, a concave pressed centre, and one specular highlight up-left. */
 .envelope__seal {
-  position: absolute; top: calc(66% - 34px); left: 50%; transform: translateX(-50%);
-  width: 68px; height: 68px; z-index: 7; border-radius: 50%;
-  background: var(--paper-tex), radial-gradient(circle at 38% 32%, #B89A5A, #6E5426 70%, #43320F);
-  background-blend-mode: soft-light; background-size: 70px, cover;
-  box-shadow: 0 5px 14px -4px rgba(44,39,28,0.55), inset 0 1px 2px rgba(255,255,255,0.14), inset 0 0 18px -4px rgba(0,0,0,0.4);
+  position: absolute; top: calc(var(--flap-h) - var(--seal-r, 38px)); left: 50%;
+  transform: translateX(-50%);
+  width: calc(var(--seal-r, 38px) * 2); height: calc(var(--seal-r, 38px) * 2);
+  z-index: 7; isolation: isolate;
+  border-radius: 49% 51% 47% 53% / 51% 48% 52% 49%; /* wax never sets perfectly round */
+  background:
+    var(--paper-tex),
+    radial-gradient(circle at 35% 28%, #C3A664 0%, #B49751 46%, #93783D 75%, #5C4818 100%);
+  background-blend-mode: soft-light; background-size: 90px, cover;
+  box-shadow:
+    0 11px 20px -7px rgba(44,39,28,0.62),        /* cast shadow on the paper */
+    0 2px 4px -1px rgba(44,39,28,0.42),
+    inset 0 2px 2px rgba(255,240,200,0.32),      /* lit top rim */
+    inset 0 -8px 13px -5px rgba(0,0,0,0.52),     /* shaded lower rim */
+    inset 6px 0 13px -7px rgba(0,0,0,0.30);
   display: flex; align-items: center; justify-content: center;
+}
+/* The stamp presses the centre down — concave: dark at the top, lit at the bottom.
+   Kept soft so it reads as a compression in wax, not a metal bezel. */
+.envelope__seal::before {
+  content: ""; position: absolute; inset: 11%; border-radius: inherit; z-index: 0;
+  background: radial-gradient(circle at 42% 36%, rgba(255,236,190,0.10), rgba(0,0,0,0.13) 82%);
+  box-shadow:
+    inset 0 5px 9px -2px rgba(0,0,0,0.34),
+    inset 0 -5px 8px -3px rgba(255,235,185,0.16);
+}
+/* Single specular highlight from the top-left light source */
+.envelope__seal::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 3;
+  background: radial-gradient(44% 38% at 31% 24%, rgba(255,248,225,0.28), transparent 72%);
+  pointer-events: none;
+}
+.envelope__seal .crest { position: relative; z-index: 2; line-height: 0; }
+
+/* On phones the envelope stands upright and fills the screen, like a real
+   invitation held in the hand. Shallower flap to suit the portrait shape.
+   (Must come after the .envelope rules above — same specificity, later wins.) */
+@media (max-width: 760px) {
+  .envelope {
+    --flap-h: 44%;
+    --seal-r: 46px;
+    width: min(88vw, 440px);
+    height: min(132vw, 78dvh);
+  }
+  .letter { top: 11%; width: 84%; }
+  .env-bloom { width: 32%; }
 }
 
 /* ---- Old-money molding frame (tone-on-tone recessed panel, like wainscoting)

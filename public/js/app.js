@@ -105,6 +105,20 @@
     if (cta) gsap.set(cta, { xPercent: -50, autoAlpha: 0, y: 12 });
 
     const vh = () => window.innerHeight;
+    const hint = document.getElementById('hero-hint');
+    const skip = document.getElementById('hero-skip');
+
+    // The page stays locked behind the sealed envelope until it's opened.
+    function lockScroll() {
+      document.documentElement.classList.add('is-sealed');
+      if (lenis) lenis.stop();
+    }
+    function unlockScroll() {
+      document.documentElement.classList.remove('is-sealed');
+      if (lenis) lenis.start();
+      if (hasGSAP) ScrollTrigger.refresh();
+      if (skip) skip.hidden = true;
+    }
 
     if (prefersReduced) {
       gsap.set(flap, { scaleY: -1 });
@@ -113,20 +127,19 @@
       gsap.set(letter, { x: 0, xPercent: -50, y: -vh() * 0.26, scale: 1.02 });
       gsap.set(photo, { y: vh() * 0.30, opacity: 1 });
       if (cta) gsap.set(cta, { xPercent: -50, autoAlpha: 1, y: 0 });
+      if (hint) gsap.set(hint, { autoAlpha: 0 });
+      unlockScroll();
       return;
     }
 
+    // Time-based (not scrubbed): the whole opening plays on tap.
     const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: '#hero', start: 'top top', end: '+=1700',
-        pin: '#hero-pin', scrub: 0.3, invalidateOnRefresh: true,
-        // Flap covers the card while lifting; once past vertical it drops
-        // behind so the card slides out on top.
-        onUpdate: (self) => { flap.style.zIndex = self.progress > 0.32 ? '1' : '6'; },
-      },
+      paused: true,
+      onUpdate: () => { flap.style.zIndex = tl.progress() > 0.32 ? '1' : '6'; },
+      onComplete: unlockScroll,
     });
 
-    tl.to('#hero-hint', { autoAlpha: 0, y: 14, duration: 0.25, ease: 'power1.out' }, 0)
+    tl.to(hint, { autoAlpha: 0, y: 14, duration: 0.25, ease: 'power1.out' }, 0)
       // Flap opens UPWARD — flips up above the envelope (apex up) and stays,
       // like a real open envelope, instead of being erased.
       .to(flap, { scaleY: -1, duration: 0.85, ease: 'power2.inOut' }, 0.05)
@@ -142,6 +155,31 @@
       .to(flap, { autoAlpha: 0, duration: 0.35, ease: 'power1.in' }, 1.15)
       .to(photo, { y: () => vh() * 0.30, opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.95)
       .to(cta, { autoAlpha: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 1.25);
+
+    let opened = false;
+    function openEnvelope() {
+      if (opened) return;
+      opened = true;
+      scene.classList.remove('is-tappable');
+      tl.play();
+    }
+    // Jump straight to the opened state (Skip, or coming back from Stripe).
+    function skipEnvelope() {
+      if (opened) return;
+      opened = true;
+      scene.classList.remove('is-tappable');
+      tl.progress(1);
+      unlockScroll();
+    }
+
+    scene.classList.add('is-tappable');
+    scene.addEventListener('click', openEnvelope);
+    if (hint) hint.addEventListener('click', openEnvelope);
+    if (skip) skip.addEventListener('click', skipEnvelope);
+    lockScroll();
+
+    // Returning from Stripe checkout? Don't make them re-open the envelope.
+    if (new URLSearchParams(window.location.search).get('nqoot')) skipEnvelope();
   }
 
   /* ---------------------------------------------------------- Blur-in ------ */
