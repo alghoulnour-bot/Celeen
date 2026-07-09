@@ -656,6 +656,10 @@
   function init() {
     if (hasGSAP) {
       gsap.registerPlugin(ScrollTrigger);
+      // Mobile browsers fire a resize every time the URL bar hides/shows while
+      // scrolling. Without this, ScrollTrigger recalculates all trigger points
+      // mid-scroll and everything jumps.
+      ScrollTrigger.config({ ignoreMobileResize: true });
       initLenis();
       buildHero();
       buildBlurIn();

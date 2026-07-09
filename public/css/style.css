@@ -183,7 +183,13 @@ img { max-width: 100%; display: block; }
    internally. .vines (58) and .ambient (59) still sit over the top. */
 .hero { position: relative; z-index: 57; isolation: isolate; background: var(--bone); }
 .hero__pin {
-  position: relative; height: 100dvh; width: 100%; overflow: hidden;
+  position: relative; width: 100%; overflow: hidden;
+  /* svh, never dvh. dvh tracks the *dynamic* viewport, which grows and shrinks
+     as the mobile URL bar hides on scroll — and since the hero is in normal
+     flow, every section below it shifted up and down to follow. svh is the
+     stable value (chrome shown) so the document height never changes. */
+  height: 100vh;   /* fallback for browsers without svh */
+  height: 100svh;
 }
 .envelope-scene {
   position: absolute; left: 50%; top: 50%; z-index: 4;
@@ -392,7 +398,8 @@ img { max-width: 100%; display: block; }
     --flap-h: 50%;
     --seal-r: 44px;
     width: min(99vw, 520px);
-    height: min(212vw, 98dvh); /* the raised flap is free to run off the top */
+    height: min(212vw, 98vh);  /* fallback */
+    height: min(212vw, 98svh); /* stable — see .hero__pin */
   }
 }
 
@@ -615,7 +622,21 @@ input:focus { outline: none; border-color: var(--gold); background: var(--paper)
 .cal__day--empty { visibility: hidden; }
 .cal__day--wed { position: relative; color: var(--bone); background: var(--green); font-weight: 500; box-shadow: 0 7px 14px -7px rgba(44,39,28,0.65); }
 .cal__day--wed::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 1px solid rgba(122,48,60,0.45); }
-.cal__note { font-family: var(--serif); font-style: italic; color: var(--ink-soft); margin-top: 1.9rem; }
+/* The hour, set under the grid between two hairline rules */
+.cal__time {
+  display: flex; align-items: center; justify-content: center; gap: 0.9rem;
+  margin-top: 1.7rem;
+}
+.cal__time span {
+  font-family: var(--script); font-size: clamp(1.6rem, 5vw, 2.1rem);
+  line-height: 1; color: var(--green);
+}
+.cal__time::before, .cal__time::after {
+  content: ""; width: clamp(32px, 9vw, 52px); height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+.cal__time::after { background: linear-gradient(270deg, transparent, var(--gold)); }
+.cal__note { font-family: var(--serif); font-style: italic; color: var(--ink-soft); margin-top: 1.5rem; }
 
 /* ============================ VENUE / LIVE MAP ======================= */
 .venue { position: relative; margin-top: 3rem; }
