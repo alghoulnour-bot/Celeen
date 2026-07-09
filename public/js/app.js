@@ -630,15 +630,26 @@
       if (lenis) lenis.scrollTo('#nqoot', { offset: -20, duration: 0.8 });
       else document.getElementById('nqoot').scrollIntoView();
     };
+    const title = document.getElementById('g-thanks-title');
+    const sub = document.getElementById('g-thanks-sub');
+
     if (!sessionId) { goto('thanks'); land(); return; }
     fetch('/api/nqoot/confirm?session_id=' + encodeURIComponent(sessionId))
       .then((r) => r.json()).then((data) => {
-        if (data && data.ok && Number.isFinite(data.amount)) {
-          document.getElementById('g-thanks-sub').textContent =
-            `Your $${Math.round(data.amount)} gift means the world to us.`;
+        if (data && data.ok) {
+          if (Number.isFinite(data.amount)) {
+            sub.textContent = `Your $${Math.round(data.amount)} gift means the world to us.`;
+          }
+        } else {
+          // Stripe says this session was never paid — don't thank them for it.
+          title.textContent = 'We couldn’t confirm that';
+          sub.textContent = 'No payment was recorded. If you were charged, please let us know.';
         }
         goto('thanks'); land();
-      }).catch(() => { goto('thanks'); land(); });
+      })
+      // Couldn't reach our server to verify. Stripe only sends people here after
+      // a successful payment, so thank them rather than accuse them.
+      .catch(() => { goto('thanks'); land(); });
   }
 
   /* --------------------------------------------------------------- Boot ---- */

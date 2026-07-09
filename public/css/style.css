@@ -648,16 +648,6 @@ input:focus { outline: none; border-color: var(--gold); background: var(--paper)
 .gallery__item:nth-child(3) img { aspect-ratio: 4 / 5; object-position: center 18%; }
 @media (max-width: 600px) { .gallery__item:nth-child(3) { max-width: 82%; } }
 
-/* ============================ DRESS CODE ============================= */
-.dress { text-align: center; margin-top: 2.4rem; }
-.dress__lead { font-family: var(--sans); font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold-deep); }
-.dress__body { font-family: var(--serif); font-style: italic; font-size: clamp(1rem, 2.3vw, 1.18rem); color: var(--ink); margin-top: 1.2rem; line-height: 1.9; max-width: 44ch; margin-inline: auto; }
-.dress__swatches { list-style: none; display: flex; justify-content: center; flex-wrap: wrap; gap: clamp(1rem, 3vw, 2rem); margin-top: 2.4rem; }
-.dress__swatch { display: flex; flex-direction: column; align-items: center; gap: 0.7rem; }
-.swatch { width: clamp(42px, 9vw, 58px); aspect-ratio: 1; border-radius: 50%; background: var(--c); border: 1px solid rgba(44,39,28,0.08);
-  box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), inset 0 -3px 6px rgba(44,39,28,0.18), 0 10px 18px -10px rgba(44,39,28,0.5); }
-.swatch__name { font-family: var(--sans); font-size: 0.55rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); }
-
 /* ============================ CLOSING + NOTES ======================== */
 .closing { text-align: center; }
 .closing__names { font-family: var(--script); font-weight: 400; font-size: clamp(2.4rem, 7vw, 3.6rem); color: var(--ink); line-height: 1.05; }
