@@ -46,9 +46,14 @@
   document.querySelectorAll('[data-vine]').forEach((el) => { el.innerHTML = CORNER_IMG; });
 
   /* ---------------------------------------------------------- Preloader ---- */
+  // Someone coming back from Stripe has already seen the preloader on their way
+  // in; making them sit through it again before we can even show their receipt
+  // is the difference between a 3s wait and none.
+  const returningFromCheckout = new URLSearchParams(window.location.search).has('nqoot');
+
   function runPreloader(done) {
     const pre = document.getElementById('preloader');
-    if (!pre || !hasGSAP || prefersReduced) {
+    if (!pre || !hasGSAP || prefersReduced || returningFromCheckout) {
       if (pre) pre.style.display = 'none';
       done();
       return;
@@ -442,10 +447,11 @@
   function makeStepper(panel, anchor) {
     const steps = {};
     panel.querySelectorAll('.q').forEach((q) => { steps[q.dataset.step] = q; });
-    return function goto(step) {
+    return function goto(step, opts) {
       Object.values(steps).forEach((q) => { q.classList.remove('is-active'); q.hidden = true; });
       steps[step].hidden = false;
       steps[step].classList.add('is-active');
+      if (opts && opts.scroll === false) return; // caller is positioning us itself
       if (lenis) lenis.scrollTo(anchor, { offset: -30, duration: 0.6 });
     };
   }
@@ -626,30 +632,47 @@
     history.replaceState(null, '', window.location.pathname + '#nqoot');
     if (status !== 'paid') return; // cancelled — leave them at the top of nqoot
     const sessionId = params.get('session_id');
-    const land = () => {
-      if (lenis) lenis.scrollTo('#nqoot', { offset: -20, duration: 0.8 });
-      else document.getElementById('nqoot').scrollIntoView();
-    };
     const title = document.getElementById('g-thanks-title');
     const sub = document.getElementById('g-thanks-sub');
 
-    if (!sessionId) { goto('thanks'); land(); return; }
+    // Put them ON the card they just paid from. Not at the top of the page,
+    // and not on a smooth ride down past the whole site — an instant jump.
+    const land = () => {
+      const el = document.getElementById('nqoot');
+      if (lenis) lenis.scrollTo(el, { offset: -20, immediate: true });
+      else el.scrollIntoView();
+    };
+
+    const thank = (amount) => {
+      title.textContent = 'Thank you';
+      sub.textContent = Number.isFinite(amount)
+        ? `Your $${Math.round(amount)} gift means the world to us.`
+        : 'Your generosity means the world to us.';
+    };
+
+    // Show the card up front, so they never glimpse the name step while we
+    // check with Stripe.
+    title.textContent = 'One moment…';
+    sub.textContent = 'Confirming your gift.';
+    goto('thanks', { scroll: false });
+    land();
+    requestAnimationFrame(land); // again once layout has settled
+
+    if (!sessionId) { thank(); return; }
     fetch('/api/nqoot/confirm?session_id=' + encodeURIComponent(sessionId))
       .then((r) => r.json()).then((data) => {
         if (data && data.ok) {
-          if (Number.isFinite(data.amount)) {
-            sub.textContent = `Your $${Math.round(data.amount)} gift means the world to us.`;
-          }
+          thank(data.amount);
         } else {
           // Stripe says this session was never paid — don't thank them for it.
           title.textContent = 'We couldn’t confirm that';
           sub.textContent = 'No payment was recorded. If you were charged, please let us know.';
         }
-        goto('thanks'); land();
+        land();
       })
       // Couldn't reach our server to verify. Stripe only sends people here after
       // a successful payment, so thank them rather than accuse them.
-      .catch(() => { goto('thanks'); land(); });
+      .catch(() => { thank(); land(); });
   }
 
   /* --------------------------------------------------------------- Boot ---- */
