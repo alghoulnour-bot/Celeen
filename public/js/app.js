@@ -585,17 +585,31 @@
       () => { state.name = null; nameNext.disabled = true; nameErr.textContent = ''; });
     nameNext.addEventListener('click', () => { if (state.name) goto('amount'); });
 
-    /* Step 2 — amount */
+    /* Step 2 — amount (free-typed, whole dollars) */
     const amountInput = document.getElementById('g-amount');
-    const amountBtns = panel.querySelectorAll('.amount-btn');
+    const amountErr = document.getElementById('g-amount-err');
     const amountNext = document.getElementById('g-amount-next');
-    amountBtns.forEach((b) => b.addEventListener('click', () => { amountBtns.forEach((x) => x.classList.remove('selected')); b.classList.add('selected'); amountInput.value = b.dataset.amount; }));
-    amountInput.addEventListener('input', () => amountBtns.forEach((x) => x.classList.remove('selected')));
+
+    amountInput.addEventListener('input', () => { amountErr.textContent = ''; });
+    amountInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); amountNext.click(); } });
+
     amountNext.addEventListener('click', () => {
-      const amt = Math.round(Number(amountInput.value));
-      if (!Number.isFinite(amt) || amt < 1) { amountInput.focus(); return; }
+      const raw = amountInput.value.trim();
+      const amt = Math.round(Number(raw));
+      // Mirrors the server's guard, which rejects anything outside 1…100000.
+      if (!raw || !Number.isFinite(amt) || amt < 1) {
+        amountErr.textContent = 'Please enter an amount of $1 or more.';
+        amountInput.focus();
+        return;
+      }
+      if (amt > 100000) {
+        amountErr.textContent = 'Please enter $100,000 or less.';
+        amountInput.focus();
+        return;
+      }
+      amountErr.textContent = '';
       state.amount = amt;
-      document.getElementById('g-pay-amount').textContent = `$${amt} · card or Apple Pay`;
+      document.getElementById('g-pay-amount').textContent = `$${amt.toLocaleString()} · card or Apple Pay`;
       goto('pay');
     });
 

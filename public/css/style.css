@@ -553,10 +553,30 @@ input:focus { outline: none; border-color: var(--gold); background: var(--paper)
 .autocomplete__list li:last-child { border-bottom: none; }
 .autocomplete__list li:hover { background: var(--cream); }
 
-.amount-presets { display: grid; grid-template-columns: repeat(3, 1fr) 1.3fr; gap: 0.6rem; margin-top: 1.4rem; }
-.amount-btn { cursor: pointer; font-family: var(--serif); font-size: 1.15rem; color: var(--ink); background: var(--bone); border: 1px solid var(--line); border-radius: 8px; padding: 0.85rem 0.4rem; transition: all 0.28s var(--ease); }
-.amount-btn:hover { border-color: var(--gold); }
-.amount-btn.selected { background: var(--green); color: var(--bone); border-color: var(--green); }
+/* Free-typed gift amount. The $ sits outside the input so what the guest types
+   is exactly the number of dollars they're giving. */
+.amount-field {
+  display: flex; align-items: center; justify-content: center; gap: 0.1rem;
+  margin-top: 1.4rem; padding: 0.9rem 1rem;
+  background-image: var(--paper-tex), linear-gradient(180deg, var(--paper), #F4EDDC);
+  background-blend-mode: soft-light; background-size: 150px, cover;
+  border: 1px solid var(--line-soft); border-radius: 3px;
+  box-shadow: inset 0 1px 3px rgba(44,39,28,0.06);
+  transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+.amount-field:focus-within {
+  border-color: var(--gold);
+  box-shadow: inset 0 1px 3px rgba(44,39,28,0.05), 0 0 0 3px rgba(142,59,72,0.13);
+}
+.amount-field__sign { font-family: var(--serif); font-size: 1.7rem; line-height: 1; color: var(--gold-deep); }
+.amount-field input[type="number"] {
+  width: 7ch; padding: 0; border: 0; background: none; box-shadow: none;
+  font-family: var(--serif); font-size: 1.7rem; line-height: 1; color: var(--ink); text-align: left;
+  -moz-appearance: textfield; appearance: textfield;
+}
+.amount-field input[type="number"]:focus { border: 0; background: none; box-shadow: none; outline: none; }
+.amount-field input::-webkit-outer-spin-button,
+.amount-field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 .card__note { font-family: var(--sans); font-size: 0.72rem; color: var(--taupe); text-align: center; margin-top: 0.9rem; line-height: 1.5; }
 
@@ -596,8 +616,6 @@ input:focus { outline: none; border-color: var(--gold); background: var(--paper)
 @media (max-width: 560px) {
   body { font-size: 17px; }
   .count { gap: 0.4rem; } .count__sep { display: none; } .count__unit { min-width: 64px; }
-  .amount-presets { grid-template-columns: repeat(3, 1fr); }
-  .amount-presets input { grid-column: span 3; }
 }
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1 !important; transform: none !important; filter: none !important; }
@@ -721,17 +739,6 @@ input[type="text"], input[type="number"] {
 input:focus { border-color: var(--gold); box-shadow: inset 0 1px 3px rgba(44,39,28,0.05), 0 0 0 3px rgba(142,59,72,0.13); }
 .autocomplete__list { border-radius: 3px; }
 
-.amount-btn {
-  border-radius: 3px; border-color: var(--line-soft);
-  background: var(--paper-tex), linear-gradient(180deg, var(--paper), #F4EDDC);
-  background-blend-mode: soft-light; background-size: 150px, cover;
-  box-shadow: inset 0 1px 3px rgba(44,39,28,0.05);
-}
-.amount-btn:hover { border-color: var(--gold); }
-.amount-btn.selected {
-  background: var(--green); color: var(--bone); border-color: var(--green);
-  box-shadow: 0 10px 18px -10px rgba(44,39,28,0.6);
-}
 
 .member {
   border-radius: 3px; border-color: var(--line-soft);

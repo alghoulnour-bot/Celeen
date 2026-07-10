@@ -304,12 +304,12 @@
         <!-- Step 2: amount -->
         <div class="q" data-step="amount" hidden>
           <p class="q__title">How much would you like to give?</p>
-          <div class="amount-presets">
-            <button type="button" class="amount-btn" data-amount="50">$50</button>
-            <button type="button" class="amount-btn" data-amount="100">$100</button>
-            <button type="button" class="amount-btn" data-amount="200">$200</button>
-            <input type="number" id="g-amount" min="1" step="1" placeholder="Other" />
+          <div class="amount-field">
+            <span class="amount-field__sign" aria-hidden="true">$</span>
+            <input type="number" id="g-amount" min="1" step="1" inputmode="numeric"
+                   placeholder="0" autocomplete="off" aria-label="Gift amount in US dollars" />
           </div>
+          <p class="q__err" id="g-amount-err" role="status"></p>
           <button class="btn btn--primary btn--full mag" id="g-amount-next">
             <span>Continue</span><span class="btn__ico">&rarr;</span>
           </button>
