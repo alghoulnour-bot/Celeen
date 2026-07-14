@@ -59,6 +59,19 @@ async function addParty({ table, members }) {
   return { party };
 }
 
+// Reassign a party's table number. The guest sees the change on their card
+// automatically, since it's read live from here on every page load.
+async function updatePartyTable(id, table) {
+  const t = Number(table);
+  // Upper bound keeps it inside Postgres int range → a clean 400, not a 500.
+  if (!Number.isInteger(t) || t <= 0 || t > 9999) return { error: 'Table must be a whole number from 1 to 9999' };
+  const rows = await sql`UPDATE parties SET table_no = ${t} WHERE id = ${String(id)}
+                         RETURNING id, table_no, members`;
+  if (!rows.length) return { error: 'Party not found' };
+  const r = rows[0];
+  return { party: { id: r.id, table: r.table_no, members: r.members } };
+}
+
 async function removeParty(id) {
   const before = await sql`SELECT count(*)::int AS n FROM parties`;
   await sql`DELETE FROM parties WHERE id = ${id}`;
@@ -73,5 +86,6 @@ module.exports = {
   findPartyByMemberName,
   findGuestByName,
   addParty,
+  updatePartyTable,
   removeParty,
 };

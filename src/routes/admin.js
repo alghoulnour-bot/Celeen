@@ -70,7 +70,10 @@ router.get('/', guard, async (req, res, next) => {
   const totalGuests = parties.reduce((n, p) => n + p.members.length, 0);
   const partyRows = parties.length
     ? parties.map((p) => `<tr>
-        <td>${esc(p.table)}</td>
+        <td class="tcell">
+          <input class="tbl" type="number" min="1" value="${esc(p.table)}" data-id="${esc(p.id)}" data-current="${esc(p.table)}" aria-label="Table number" />
+          <button class="save" data-id="${esc(p.id)}" hidden>Save</button>
+        </td>
         <td>${p.members.map((m) => (respondedNames.has(String(m).toLowerCase())
           ? `<b>${esc(m)}</b>` : esc(m))).join(', ')}</td>
         <td><button class="rm" data-id="${esc(p.id)}">Remove</button></td>
@@ -107,6 +110,11 @@ router.get('/', guard, async (req, res, next) => {
   form.add button{background:var(--green);color:var(--bone);border:none;border-radius:8px;padding:.6rem 1.1rem;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;}
   button.rm{background:none;border:1px solid var(--line);border-radius:6px;color:#9a5a3a;font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.35rem .7rem;cursor:pointer;}
   button.rm:hover{border-color:#9a5a3a;}
+  .tcell{white-space:nowrap;}
+  input.tbl{width:58px;padding:.35rem .4rem;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:.95rem;}
+  button.save{margin-left:.4rem;background:var(--green);color:var(--bone);border:none;border-radius:6px;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.35rem .7rem;cursor:pointer;}
+  button.save[hidden]{display:none;}
+  button.save:disabled{opacity:.6;cursor:default;}
   .msg{font-size:.95rem;color:#9a5a3a;min-height:1.2em;margin-bottom:.6rem;}
 </style></head><body>
   <h1>Omar &amp; Celeen</h1>
@@ -155,6 +163,28 @@ router.get('/', guard, async (req, res, next) => {
           location.reload();
         });
     });
+    // Reassign a table number. The Save button appears only once the value
+    // changes; Enter also saves.
+    Array.prototype.forEach.call(document.querySelectorAll('.tbl'), function(inp){
+      var save = inp.parentNode.querySelector('.save');
+      function commit(){
+        var v = inp.value.trim();
+        if(!v || Number(v) < 1){ inp.focus(); return; }
+        save.disabled = true; save.textContent = 'Saving…';
+        api('party/table', { id: inp.dataset.id, table: v }).then(function(res){
+          if(!res.ok){
+            document.getElementById('msg').textContent = res.d.error || 'Could not update table.';
+            save.disabled = false; save.textContent = 'Save'; return;
+          }
+          location.reload(); // re-sorts the list by table number
+        });
+      }
+      inp.addEventListener('input', function(){
+        save.hidden = (inp.value.trim() === inp.dataset.current);
+      });
+      inp.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); commit(); } });
+      save.addEventListener('click', commit);
+    });
     Array.prototype.forEach.call(document.querySelectorAll('.rm'), function(btn){
       btn.addEventListener('click', function(){
         if(!confirm('Remove this party from the guest list?')) return;
@@ -183,6 +213,15 @@ router.post('/party/add', guard, express.json(), async (req, res, next) => {
   try {
     const { table, members } = req.body || {};
     const result = await guestStore.addParty({ table, members });
+    if (result.error) return res.status(400).json({ error: result.error });
+    res.json({ ok: true, party: result.party });
+  } catch (err) { next(err); }
+});
+
+router.post('/party/table', guard, express.json(), async (req, res, next) => {
+  try {
+    const { id, table } = req.body || {};
+    const result = await guestStore.updatePartyTable(id, table);
     if (result.error) return res.status(400).json({ error: result.error });
     res.json({ ok: true, party: result.party });
   } catch (err) { next(err); }
